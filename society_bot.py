@@ -400,5 +400,5 @@ async def end(ctx):
 
 
 # Run the bot
-TOKEN = "MTMzMjE2NDA5MzA3OTA2NDY5Nw.G2Gpg3.S8VbSRXQMxf9lI4AKbulBQmaHVy5YD63frHk9U"
+TOKEN = "MTMzMjE2NDA5MzA3OTA2NDY5Nw.GbRXct.clBwzcrCrKlOkw16G1tGd0Gb2Um8gvamiW5d7k"
 bot.run(TOKEN)
