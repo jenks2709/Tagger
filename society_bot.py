@@ -14,13 +14,17 @@ cursor = conn.cursor()
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS humans (
     player_id TEXT PRIMARY KEY,
-    braincode TEXT NOT NULL
+    braincode TEXT NOT NULL,
+    first_name TEXT,
+    last_name TEXT
 )
 """)
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS zombies (
     player_id TEXT PRIMARY KEY,
-    braincode TEXT NOT NULL
+    braincode TEXT NOT NULL,
+    first_name TEXT,
+    last_name TEXT
 )
 """)
 conn.commit()
@@ -64,12 +68,15 @@ async def join(ctx, first_name: str = None, last_name: str = None):
         await member.add_roles(human_role)
 
         braincode = "".join(random.sample(words, 3))
+        # Insert player info into the database
         conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
-        cursor.execute("INSERT OR REPLACE INTO humans (player_id, braincode) VALUES (?, ?)", (str(member.id), braincode))
+        cursor.execute("""
+            INSERT OR REPLACE INTO humans (player_id, braincode, first_name, last_name) 
+            VALUES (?, ?, ?, ?)
+        """, (str(member.id), braincode, first_name, last_name))
         conn.commit()
         conn.close()
-
         if first_name and last_name:
             try:
                 await member.edit(nick=f"{first_name} {last_name}")
