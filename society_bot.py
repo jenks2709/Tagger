@@ -198,8 +198,8 @@ async def tag(ctx, braincode: str):
         await ctx.send(f"An error occurred while tagging: {e}")
 
 
-@bot.command(name="check")
-async def check(ctx):
+@bot.command(name="check_divers")
+async def check_divers(ctx):
     if ctx.channel.name != "bot-commands":
         await ctx.send("This command can only be used in the bot-commands channel.")
         return
@@ -212,17 +212,17 @@ async def check(ctx):
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
 
-        # Fetch all rows from the humans table
-        cursor.execute("SELECT * FROM humans")
+        # Fetch all rows from the Helldivers table
+        cursor.execute("SELECT * FROM helldivers")
         rows = cursor.fetchall()
 
         # Prepare the response message
         if rows:
-            response = "Contents of the humans table:\n"
+            response = "Contents of the Humans table:\n"
             for row in rows:
                 response += f"{row}\n"
         else:
-            response = "The humans table is empty."
+            response = "There are no Humans."
 
         # Close the connection
         conn.close()
@@ -234,8 +234,47 @@ async def check(ctx):
         await ctx.send(f"Database error: {e}")
     except Exception as e:
         await ctx.send(f"An unexpected error occurred: {e}")
+
+@bot.command(name="check_zombies")
+async def check_zombiess(ctx):
+    if ctx.channel.name != "bot-commands":
+        await ctx.send("This command can only be used in the bot-commands channel.")
+        return
+
+    """Check the contents of the humans table in the database."""
+    db_path = "database.db"  # Path to your database
+
+    try:
+        # Connect to the database
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        # Fetch all rows from the Zombies table
+        cursor.execute("SELECT * FROM zombies")
+        rows = cursor.fetchall()
+
+        # Prepare the response message
+        if rows:
+            response = "Zombie Players:\n"
+            for row in rows:
+                response += f"{row}\n"
+        else:
+            response = "There are no Zombies."
+
+        # Close the connection
+        conn.close()
+
+        # Send the response
+        await ctx.send(response)
+
+    except sqlite3.OperationalError as e:
+        await ctx.send(f"Database error: {e}")
+    except Exception as e:
+        await ctx.send(f"An unexpected error occurred: {e}")
+        
 @bot.command(name="revive")
 async def revive(ctx, braincode: str):
+    """Revives a player based on their braincode and returns them to the Humans."""
     try:
         await ctx.message.delete()  # Deletes the message that triggered the command
     except discord.Forbidden:
@@ -248,21 +287,21 @@ async def revive(ctx, braincode: str):
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
-    # Check if the braincode exists in the zombies table
-    cursor.execute("SELECT player_id FROM zombies WHERE braincode = ?", (braincode,))
+    # Check if the braincode exists in the 'zombie' table ()
+    cursor.execute("SELECT player_id, first_name, last_name FROM zombies WHERE braincode = ?", (braincode,))
     result = cursor.fetchone()
 
     if not result:
-        await ctx.send("No player found with that braincode, or the player is not a zombie.")
+        await ctx.send("No player found with that service number, or the player is not dead.")
         conn.close()
         return
 
-    # Extract the player_id from the result
-    player_id = result[0]
-    
-    # Retrieve the member object from the player_id (use the ID, not the name)
+    # Extract player information
+    player_id, first_name, last_name = result
+
+    # Retrieve the member object from the player_id
     guild = ctx.guild
-    member = guild.get_member(int(player_id))  # Using the player_id from the database as an integer
+    member = guild.get_member(int(player_id))
     
     if not member:
         await ctx.send(f"Could not find the player with ID {player_id} in this server.")
@@ -284,33 +323,39 @@ async def revive(ctx, braincode: str):
         if zombie_role in member.roles:
             await member.remove_roles(zombie_role)
             await member.add_roles(human_role)
-            
-            # Delete the player's entry from zombies and add them to humans
-            cursor.execute("DELETE FROM zombies WHERE braincode = ?", (braincode,))
-            new_braincode = "".join(random.sample(words, 3))  # Generate a new braincode for the revived human
-            cursor.execute("INSERT OR REPLACE INTO humans (player_id, braincode) VALUES (?, ?)", (member.id, new_braincode))
+
+            # Generate a new 6-digit service number for the revived player
+            new_service_number = str(random.randint(100000, 999999))
+
+            # Remove the player from the 'illuminate' table and add them back to 'helldivers'
+            cursor.execute("DELETE FROM illuminate WHERE service_number = ?", (service_number,))
+            cursor.execute("""
+                INSERT OR REPLACE INTO helldivers (player_id, service_number, first_name, last_name) 
+                VALUES (?, ?, ?, ?)
+            """, (member.id, new_service_number, first_name, last_name))
             conn.commit()
 
-            # Notify in the human and zombie channels and DM the player the new braincode
-            human_chat_channel = discord.utils.get(guild.text_channels, name="human-chat")
-            zombie_chat_channel = discord.utils.get(guild.text_channels, name="zombie-chat")
+            # Notify in relevant channels and DM the player
+            human_chat_channel = discord.utils.get(guild.text_channels, name="helldiver-garrison")
+            zombie_chat_channel = discord.utils.get(guild.text_channels, name="illuminate-hive")
+            
             if human_chat_channel:
-                await human_chat_channel.send(f"{member.mention} has been revived and is now a Human again!")
+                await human_chat_channel.send(f"{member.mention} has been revived and is now a Helldiver again!")
             if zombie_chat_channel:
-                await zombie_chat_channel.send(f"{member.mention} has been revived and is now a Human again!")
-            await ctx.send(f"{member.mention} has been revived! They are now a Human again.")
-            try:
-                await member.send(f"You have been revived and your new braincode is: {new_braincode}")
-            except discord.Forbidden:
-                await ctx.send("Failed to send DM. Please check your privacy settings.")
+                await zombie_chat_channel.send(f"{member.mention} has been revived and is no longer an Illuminate!")
 
+            await ctx.send(f"Player has been revived successfully")
+
+            try:
+                await member.send(f"You have been revived! Your new service number is: {new_service_number}")
+            except discord.Forbidden:
+                return
         else:
-            await ctx.send(f"{member.mention} is not a Zombie.")
+            await ctx.send(f"{member.mention} is not an Zombie.")
     except Exception as e:
         await ctx.send(f"An error occurred while reviving: {e}")
     finally:
         conn.close()
-
 
 @bot.command(name="reset")
 async def reset(ctx):
