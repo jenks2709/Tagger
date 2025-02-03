@@ -182,15 +182,14 @@ async def tag(ctx, braincode: str):
             await member.add_roles(zombie_role)
 
             # Load a random message from the .txt file
-            #try:
-            #    with open("death_messages.txt", "r") as f:
-            #        messages = [line.strip() for line in f if line.strip()]  # Exclude empty lines
-            #    tag_message = random.choice(messages) if messages else "The infection spreads further..."
-            #except FileNotFoundError:
-            #    tag_message = "The infection spreads further..."  # Default message if file not found
+            try:
+                with open("death_messages.txt", "r") as f:
+                    messages = [line.strip() for line in f if line.strip()]  # Exclude empty lines
+                tag_message = random.choice(messages) if messages else "The infection spreads further..."
+            except FileNotFoundError:
+                tag_message = "The infection spreads further..."  # Default message if file not found
 
             # Send the announcement with the random message
-            tag_message = str("WAAAAAAAAAGH!")
             await ctx.send(f"{member.mention} was tagged by {tagger.mention}! {tag_message}")
         else:
             await ctx.send(f"{member.mention} is already a Zombie.")
@@ -198,8 +197,8 @@ async def tag(ctx, braincode: str):
         await ctx.send(f"An error occurred while tagging: {e}")
 
 
-@bot.command(name="check_divers")
-async def check_divers(ctx):
+@bot.command(name="check_humans")
+async def check_humans(ctx):
     if ctx.channel.name != "bot-commands":
         await ctx.send("This command can only be used in the bot-commands channel.")
         return
@@ -213,12 +212,12 @@ async def check_divers(ctx):
         cursor = conn.cursor()
 
         # Fetch all rows from the Helldivers table
-        cursor.execute("SELECT * FROM helldivers")
+        cursor.execute("SELECT * FROM humans")
         rows = cursor.fetchall()
 
         # Prepare the response message
         if rows:
-            response = "Contents of the Humans table:\n"
+            response = "Human Players:\n"
             for row in rows:
                 response += f"{row}\n"
         else:
@@ -236,7 +235,7 @@ async def check_divers(ctx):
         await ctx.send(f"An unexpected error occurred: {e}")
 
 @bot.command(name="check_zombies")
-async def check_zombiess(ctx):
+async def check_zombies(ctx):
     if ctx.channel.name != "bot-commands":
         await ctx.send("This command can only be used in the bot-commands channel.")
         return
@@ -325,29 +324,29 @@ async def revive(ctx, braincode: str):
             await member.add_roles(human_role)
 
             # Generate a new 6-digit service number for the revived player
-            new_service_number = str(random.randint(100000, 999999))
+            new_braincode = "".join(random.sample(words, 3))
 
-            # Remove the player from the 'illuminate' table and add them back to 'helldivers'
-            cursor.execute("DELETE FROM illuminate WHERE service_number = ?", (service_number,))
+            # Remove the player from the 'Zombie' table and add them back to 'Humans'
+            cursor.execute("DELETE FROM zombies WHERE braincode = ?", (braincode,))
             cursor.execute("""
-                INSERT OR REPLACE INTO helldivers (player_id, service_number, first_name, last_name) 
+                INSERT OR REPLACE INTO humans (player_id, braincode, first_name, last_name) 
                 VALUES (?, ?, ?, ?)
-            """, (member.id, new_service_number, first_name, last_name))
+            """, (member.id, new_braincode, first_name, last_name))
             conn.commit()
 
             # Notify in relevant channels and DM the player
-            human_chat_channel = discord.utils.get(guild.text_channels, name="helldiver-garrison")
-            zombie_chat_channel = discord.utils.get(guild.text_channels, name="illuminate-hive")
+            human_chat_channel = discord.utils.get(guild.text_channels, name="human-chat")
+            zombie_chat_channel = discord.utils.get(guild.text_channels, name="zombie chat")
             
             if human_chat_channel:
-                await human_chat_channel.send(f"{member.mention} has been revived and is now a Helldiver again!")
+                await human_chat_channel.send(f"{member.mention} has been revived and is now a Human again!")
             if zombie_chat_channel:
-                await zombie_chat_channel.send(f"{member.mention} has been revived and is no longer an Illuminate!")
+                await zombie_chat_channel.send(f"{member.mention} has been revived and is no longer a Zombie!")
 
             await ctx.send(f"Player has been revived successfully")
 
             try:
-                await member.send(f"You have been revived! Your new service number is: {new_service_number}")
+                await member.send(f"You have been revived! Your new braincode is: {new_braincode}")
             except discord.Forbidden:
                 return
         else:
@@ -416,7 +415,7 @@ async def end(ctx):
     cursor.execute("SELECT player_id FROM humans")
     user_ids_table1 = cursor.fetchall()
 
-    cursor.execute("SELECT player_id FROM zombies")  # Replace 'other_table' with the actual table name
+    cursor.execute("SELECT player_id FROM zombies") 
     user_ids_table2 = cursor.fetchall()
 
     conn.close()
