@@ -137,10 +137,9 @@ async def tag(ctx, braincode: str):
         cursor = conn.cursor()
 
         # Query the human database for the player_id associated with the braincode
-        cursor.execute("SELECT (player_id, braincode, first_name, last_name) FROM humans WHERE braincode = ?", (braincode,))
-        result = cursor.fetchall()
-        ctx.send(result)
-        conn.commit()
+        cursor.execute("SELECT player_id, braincode, first_name, last_name FROM humans WHERE braincode = ?", (braincode,))
+        result = cursor.fetchone()
+        
 
     except sqlite3.Error as e:
         await ctx.send(f"Database error: {e}")
