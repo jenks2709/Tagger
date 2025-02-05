@@ -454,5 +454,6 @@ async def end(ctx):
 
 
 # Run the bot
-TOKEN = ""
+with open('society_token.txt', 'r') as file:
+    TOKEN = file.read()  # Read the entire content of the file as a string
 bot.run(TOKEN)
