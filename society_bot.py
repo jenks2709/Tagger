@@ -160,7 +160,7 @@ async def tag(ctx, braincode: str):
     member = guild.get_member(int(player_id))  # Convert player_id to an integer if stored as TEXT
     tagger = ctx.author
 
-    cursor.execute("INSERT OR REPLACE INTO zombies (player_id, braincode, first_name, last_name) VALUES (?, ?, ?, ?)", (member.id, braincode))
+    cursor.execute("INSERT OR REPLACE INTO zombies (player_id, braincode, first_name, last_name) VALUES (?, ?, ?, ?)", (member.id, braincode, first_name, last_name))
     cursor.execute("DELETE FROM humans WHERE braincode = ?", (braincode,))
     conn.commit()
     conn.close()
