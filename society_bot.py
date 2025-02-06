@@ -123,6 +123,8 @@ async def tag(ctx, braincode: str):
     Handles the tagging process, converting a Human into a Zombie,
     and includes a random message from a .txt file in the announcement.
     """
+    
+    
     try:
         await ctx.message.delete()  # Deletes the message that triggered the command
     except discord.Forbidden:
@@ -158,6 +160,8 @@ async def tag(ctx, braincode: str):
     guild = ctx.guild
     member = guild.get_member(int(player_id))  # Convert player_id to an integer if stored as TEXT
     tagger = ctx.author
+    human_chat_channel = discord.utils.get(guild.text_channels, name="human-chat")
+    zombie_chat_channel = discord.utils.get(guild.text_channels, name="zombie-chat")
 
     cursor.execute("INSERT OR REPLACE INTO zombies (player_id, braincode, first_name, last_name) VALUES (?, ?, ?, ?)", (member.id, braincode, first_name, last_name))
     cursor.execute("DELETE FROM humans WHERE braincode = ?", (braincode,))
@@ -190,9 +194,14 @@ async def tag(ctx, braincode: str):
                 tag_message = random.choice(messages) if messages else "The infection spreads further..."
             except FileNotFoundError:
                 tag_message = "The infection spreads further..."  # Default message if file not found
-
-            # Send the announcement with the random message
-            await ctx.send(f"{member.mention} was tagged by {tagger.mention}! {tag_message}")
+            if human_chat_channel:
+                if member.id == 560509176669798440:
+                    gif_path = "badspeed_deployed.gif"
+                    await human_chat_channel.send(f"{member.mention} was tagged!", file=discord.File(gif_path))
+                else:
+                    await ctx.send(f"{member.mention} was tagged by {tagger.mention}! {tag_message}")
+            if zombie_chat_channel:
+                await ctx.send(f"{member.mention} was tagged by {tagger.mention}!")
         else:
             await ctx.send(f"{member.mention} is already a Zombie.")
     except Exception as e:
