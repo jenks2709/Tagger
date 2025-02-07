@@ -462,6 +462,6 @@ async def end(ctx):
 
 
 # Run the bot
-with open("filename.txt", "r", encoding="utf-8") as file:
+with open("PLACEHOLDER.txt", "r", encoding="utf-8") as file:
     TOKEN = file.read()
 bot.run(TOKEN)
