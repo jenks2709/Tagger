@@ -70,7 +70,7 @@ async def join(ctx, first_name: str = None, last_name: str = None):
         braincode = "".join(random.sample(words, 3))
         # Insert player info into the database
         conn = sqlite3.connect("database.db")
-        cursor = conn.cursor()
+        cursor = conn.cursor()   
         cursor.execute("""
             INSERT OR REPLACE INTO humans (player_id, braincode, first_name, last_name) 
             VALUES (?, ?, ?, ?)
@@ -462,5 +462,6 @@ async def end(ctx):
 
 
 # Run the bot
-TOKEN = "MTMzMjE2NDA5MzA3OTA2NDY5Nw" + ".G72cOK.ZYdLJjk" + "_FWlTArwasLZ1u-vqIBc6AQLhE5HM6g"
+with open("filename.txt", "r", encoding="utf-8") as file:
+    TOKEN = file.read()
 bot.run(TOKEN)
