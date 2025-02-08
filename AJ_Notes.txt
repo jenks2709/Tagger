@@ -1,0 +1,18 @@
+ HIGH PRIORITY!!!
+1. code a .help function to allow members to get help remembering what command does what
+
+
+Low Priority
+
+dayplay automation function ideas:
+ .release
+ .claim
+ .check_owner
+ .victor
+ .end_dayplay
+ .
+
+		Dayplay Automation Development notes:
+
+		1. Use BfS dayplay as an example
+		2. 
