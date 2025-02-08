@@ -28,7 +28,7 @@ def render_tag_graph(tags=None): #generates an image based on the graph passed t
 
     # plt.show() # uncomment to show graph in popup window
 
-    plt.savefig("tagGraph.png", dpi=200) # save the graph to file
+    plt.savefig("tag_graph_image.png", dpi=200) # save the graph to file
 
 # uncomment below to call function with test data
 # tags = [("badspeed", "bergheimer"), ("badspeed", "stewart"), ("badspeed", "mae"), ("mae", "ed"), ("bergheimer", "oli"), ("bergheimer", "logan"), ("logan", "billy"), ("harry", "AJ"), ("harry", "may"), ("AJ", "jasmine"), ("jasmine", "charlotte"), ("charlotte", "joe"), ("joe", "vlad")]
