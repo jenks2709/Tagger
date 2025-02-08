@@ -4,7 +4,7 @@ Repository containing the code for the Tagger bot used by [RHUL HvZ Society](htt
 ## Running the bot
 Create a file called `token.txt` containing [your bots token](https://www.madpenguin.org/how-to-get-your-discord-bot-token/)
 
-Run `society_bot.py`
+Run `bot.py`
 
 The bot should show as "online" in discord
 
