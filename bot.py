@@ -38,7 +38,31 @@ intents.members = True
 intents.message_content = True
 bot = commands.Bot(command_prefix=".", intents=intents)
 
+#Human, Zombie and Spectator count variable set up
 
+human_count = 0
+zombie_count = 0
+spectator_count = 0
+
+#Function set up
+async def update_human_count():
+    """Updates the global human_count variable from the database."""
+    global human_count
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM humans")
+    human_count = cursor.fetchone()[0]  # Update the global variable
+    conn.close()
+    
+async def update_zombie_count():
+    """Updates the global human_count variable from the database."""
+    global zombie_count
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM zombies")
+    zombie_count = cursor.fetchone()[0]  # Update the global variable
+    conn.close()
+    
 @bot.event
 async def on_ready():
     print("Tagger is online, running and ready for commands")
@@ -101,6 +125,7 @@ async def join(ctx, first_name: str = None, last_name: str = None):
             await member.send(f"Your braincode is: **`{braincode}`**\n*Keep it secret, Keep it safe!*")
         except discord.Forbidden:
             await ctx.send("Failed to send DM. Please check your privacy settings.")
+        await update_human_count()
     else:
         await ctx.send("You must use this command in the `#join` channel")
 
@@ -215,16 +240,43 @@ async def tag(ctx, braincode: str):
                     gif_path = "badspeed_deployed.gif"
                     await human_chat_channel.send(f"{member.mention} was tagged!", file=discord.File(gif_path))
                 else:
-                    await ctx.send(f"{member.mention} was tagged by {tagger.mention}! {tag_message}")
+                    await human_chat_channel.send(f"{member.mention} was tagged by {tagger.mention}! {tag_message}")
             if zombie_chat_channel:
-                await ctx.send(f"{member.mention} was tagged by {tagger.mention}!")
+                await ctx.send(f"{member.mention} was tagged by {tagger.mention}{tag_message}!")
+            await update_human_count()
+            await update_zombie_count()
         else:
             await ctx.send(f"{member.mention} is already a Zombie.")
     except Exception as e:
         await ctx.send(f"An error occurred while tagging: `{e}`")
 
+@bot.command()
+async def how_many_humans(ctx):
+    """Returns the number of Humans in the game"""
+    try:
+        await ctx.message.delete()
+    except discord.Forbidden:
+        pass
+    if human_count == 1:
+        await ctx.send(f"There is **1** Human!")
+    else:
+        await ctx.send(f"There are **{human_count}** Humans!")
 
+@bot.command()
+async def how_many_zombies(ctx):
+    """Returns the number of Zombies in the game"""
+    try:
+        await ctx.message.delete()
+    except discord.Forbidden:
+        pass
+    if zombie_count == 1:
+        await ctx.send(f"There is **1** Zombie!")
+    else:
+        await ctx.send(f"There are **{zombie_count}** Zombies!")
+                           
+    
 @bot.command(name="check_humans")
+
 async def check_humans(ctx):
     """Check the contents of the humans table in the database. It can only be run by Committee or Moderators"""
     if ctx.channel.name != "bot-commands":
@@ -373,6 +425,8 @@ async def revive(ctx, braincode: str):
                 await zombie_chat_channel.send(f"{member.mention} has been revived and is no longer a Zombie!")
 
             await ctx.send(f"Player has been revived successfully")
+            await update_human_count()
+            await update_zombie_count()
 
             try:
                 await member.send(f"**You have been revived!**\n Your new braincode is: **`{new_braincode}`**\n*Keep it secret, keep it safe!*")
@@ -381,7 +435,7 @@ async def revive(ctx, braincode: str):
         else:
             await ctx.send(f"{member.mention} is not an Zombie.")
     except Exception as e:
-        await ctx.send(f"An error occurred while reviving: `{e}`")
+        await ctx.send(f"An error occurred while reviving: `{e}`")  
     finally:
         conn.close()
 
@@ -421,6 +475,8 @@ async def reset(ctx):
     conn.commit()
     conn.close()
     await ctx.send("Game has been reset.")
+    await update_human_count()
+    await update_zombie_count()
 
 @bot.command(name="end")
 async def end(ctx):
