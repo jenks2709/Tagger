@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import random
+import json
 import sqlite3
 import os
 
@@ -202,6 +203,15 @@ async def tag(ctx, braincode: str):
                     await ctx.send(f"{member.mention} was tagged by {tagger.mention}! {tag_message}")
             if zombie_chat_channel:
                 await ctx.send(f"{member.mention} was tagged by {tagger.mention}!")
+            
+            graph_file=open("tag_graph.json")
+            tag_graph= json.load(graph_file) # Read tag data from json file
+            edges = tag_graph["edges"]
+            edges.append([str(member.id), str(tagger.id)]) # Add the new tag to the list
+            # await ctx.send(edges)
+            tag_graph = json.dumps(edges)
+            json.dump(tag_graph, graph_file)
+
         else:
             await ctx.send(f"{member.mention} is already a Zombie.")
     except Exception as e:
@@ -462,6 +472,6 @@ async def end(ctx):
 
 
 # Run the bot
-with open("PLACEHOLDER.txt", "r", encoding="utf-8") as file:
+with open("token.txt", "r", encoding="utf-8") as file:
     TOKEN = file.read()
 bot.run(TOKEN)
