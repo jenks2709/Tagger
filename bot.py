@@ -41,7 +41,7 @@ bot = commands.Bot(command_prefix=".", intents=intents)
 
 @bot.event
 async def on_ready():
-    print("Tagger is online and ready to run")
+    print("Tagger is online, running and ready for commands")
 
 @bot.command(name="tagger_help")
 async def tagger_help(ctx):
