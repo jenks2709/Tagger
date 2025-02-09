@@ -88,7 +88,7 @@ async def join(ctx, first_name: str = None, last_name: str = None):
         except discord.Forbidden:
             await ctx.send("Failed to send DM. Please check your privacy settings.")
     else:
-        await ctx.send("You must use this command in the #join channel")
+        await ctx.send("You must use this command in the `#join` channel")
 
 @bot.command(name="check_braincode")
 async def check_braincode(ctx):
@@ -130,7 +130,7 @@ async def tag(ctx, braincode: str):
     except discord.Forbidden:
         await ctx.send("I do not have permission to delete messages.")
     if ctx.channel.name != "zombie-chat":
-        await ctx.send("This command must be used in #zombie-chat")
+        await ctx.send("This command must be used in `#zombie-chat`")
         return
 
     # Connect to the human database
@@ -211,7 +211,7 @@ async def tag(ctx, braincode: str):
 @bot.command(name="check_humans")
 async def check_humans(ctx):
     if ctx.channel.name != "bot-commands":
-        await ctx.send("This command can only be used in the bot-commands channel.")
+        await ctx.send("This command can only be used in the `#bot-commands` channel.")
         return
 
     """Check the contents of the humans table in the database."""
@@ -248,7 +248,7 @@ async def check_humans(ctx):
 @bot.command(name="check_zombies")
 async def check_zombies(ctx):
     if ctx.channel.name != "bot-commands":
-        await ctx.send("This command can only be used in the bot-commands channel.")
+        await ctx.send("This command can only be used in the `#bot-commands` channel.")
         return
 
     """Check the contents of the humans table in the database."""
@@ -291,7 +291,7 @@ async def revive(ctx, braincode: str):
         await ctx.send("I do not have permission to delete messages.")
 
     if ctx.channel.name != "bot-commands":
-        await ctx.send("This command must be used in the #bot-commands channel.")
+        await ctx.send("This command must be used in the `#bot-commands` channel.")
         return
 
     conn = sqlite3.connect("database.db")
@@ -370,7 +370,7 @@ async def revive(ctx, braincode: str):
 @bot.command(name="reset")
 async def reset(ctx):
     if ctx.channel.name != "bot-commands":
-        await ctx.send("This command can only be used in the bot-commands channel.")
+        await ctx.send("This command can only be used in the `#bot-commands` channel.")
         return
 
     guild = ctx.guild
