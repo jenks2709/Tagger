@@ -84,7 +84,7 @@ async def join(ctx, first_name: str = None, last_name: str = None):
                 pass
 
         try:
-            await member.send(f"Your braincode is: {braincode}")
+            await member.send(f"Your braincode is: **`{braincode}`**\n*Keep it secret, Keep it safe!*")
         except discord.Forbidden:
             await ctx.send("Failed to send DM. Please check your privacy settings.")
     else:
@@ -396,7 +396,7 @@ async def reset(ctx):
             braincode = "".join(random.sample(words, 3))
             cursor.execute("INSERT INTO humans (player_id, braincode) VALUES (?, ?)", (str(member.id), braincode))
             try:
-                await member.send(f"Your new braincode is: {braincode}")
+                await member.send(f"Your new braincode is: **`{braincode}`**\n*Keep it secret, keep it safe!*")
             except discord.Forbidden:
                 await ctx.send(f"Could not DM {member.display_name}.")
     conn.commit()
