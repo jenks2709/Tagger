@@ -144,7 +144,7 @@ async def tag(ctx, braincode: str):
         
 
     except sqlite3.Error as e:
-        await ctx.send(f"Database error: {e}")
+        await ctx.send(f"Database error: `{e}`")
         return
 
     if not result:
@@ -205,7 +205,7 @@ async def tag(ctx, braincode: str):
         else:
             await ctx.send(f"{member.mention} is already a Zombie.")
     except Exception as e:
-        await ctx.send(f"An error occurred while tagging: {e}")
+        await ctx.send(f"An error occurred while tagging: `{e}`")
 
 
 @bot.command(name="check_humans")
@@ -241,9 +241,9 @@ async def check_humans(ctx):
         await ctx.send(response)
 
     except sqlite3.OperationalError as e:
-        await ctx.send(f"Database error: {e}")
+        await ctx.send(f"Database error: `{e}`")
     except Exception as e:
-        await ctx.send(f"An unexpected error occurred: {e}")
+        await ctx.send(f"An unexpected error occurred: `{e}`")
 
 @bot.command(name="check_zombies")
 async def check_zombies(ctx):
@@ -278,9 +278,9 @@ async def check_zombies(ctx):
         await ctx.send(response)
 
     except sqlite3.OperationalError as e:
-        await ctx.send(f"Database error: {e}")
+        await ctx.send(f"Database error: `{e}`")
     except Exception as e:
-        await ctx.send(f"An unexpected error occurred: {e}")
+        await ctx.send(f"An unexpected error occurred: `{e}`")
         
 @bot.command(name="revive")
 async def revive(ctx, braincode: str):
@@ -363,7 +363,7 @@ async def revive(ctx, braincode: str):
         else:
             await ctx.send(f"{member.mention} is not an Zombie.")
     except Exception as e:
-        await ctx.send(f"An error occurred while reviving: {e}")
+        await ctx.send(f"An error occurred while reviving: `{e}`")
     finally:
         conn.close()
 
@@ -447,7 +447,7 @@ async def end(ctx):
             except discord.Forbidden:
                 await ctx.send(f"Could not remove roles for {member.display_name}.")
             except Exception as e:
-                await ctx.send(f"An error occurred while removing roles: {e}")
+                await ctx.send(f"An error occurred while removing roles: `{e}`")
 
     # Delete the database file
     try:
