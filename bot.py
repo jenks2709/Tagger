@@ -114,7 +114,7 @@ async def check_braincode(ctx):
         await ctx.send(f"{ctx.author.mention}, you do not have an associated braincode.")
     else:
         braincode = result[0]  # Extract the braincode from the result
-        await ctx.author.send(f"{ctx.author.mention}, your braincode is: `{braincode}`")
+        await ctx.author.send(f"{ctx.author.mention}, your braincode is: **`{braincode}`**")
 
 
 @bot.command(name="tag")
@@ -357,7 +357,7 @@ async def revive(ctx, braincode: str):
             await ctx.send(f"Player has been revived successfully")
 
             try:
-                await member.send(f"You have been revived! Your new braincode is: {new_braincode}")
+                await member.send(f"**You have been revived!**\n Your new braincode is: **`{new_braincode}`**\n*Keep it secret, keep it safe!*")
             except discord.Forbidden:
                 return
         else:
