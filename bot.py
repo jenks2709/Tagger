@@ -43,8 +43,8 @@ bot = commands.Bot(command_prefix=".", intents=intents)
 async def on_ready():
     print("Tagger is online and ready to run")
 
-@bot.command(name="help")
-async def help(ctx):
+@bot.command(name="tagger_help")
+async def tagger_help(ctx):
     """Displays a list of all commands and their descriptions."""
     help_message = "**Available Commands:**\n"
     if ctx.channel.name != "tagger-help":
@@ -60,7 +60,7 @@ async def help(ctx):
 
 @bot.command()
 async def join(ctx, first_name: str = None, last_name: str = None):
-    """Assigns the 'Human' role, generates a braincode, and optionally changes the player's nickname."""
+    """Assigns the 'Human' role, generates a braincode, and optionally changes the player's nickname. This command is run by typing '.join' into the '#-join' channel."""
     try:
         await ctx.message.delete()
     except discord.Forbidden:
@@ -106,6 +106,7 @@ async def join(ctx, first_name: str = None, last_name: str = None):
 
 @bot.command(name="check_braincode")
 async def check_braincode(ctx):
+    """ This command will resend a DM containing your braincode. This command is run by typing '.check_braincode' into any channel"""
     try:
         await ctx.message.delete()
     except discord.Forbidden:
@@ -134,8 +135,9 @@ async def check_braincode(ctx):
 @bot.command(name="tag")
 async def tag(ctx, braincode: str):
     """
-    Handles the tagging process, converting a Human into a Zombie,
-    and includes a random message from a .txt file in the announcement.
+    Handles the tagging process, converting a Human into a Zombie, using the braincode given in the command.
+    This command is run by typing '.tag' followed by the braincode needed into '#zombie-chat'.
+    Example: '.tag braincode'
     """
     
     
@@ -224,11 +226,12 @@ async def tag(ctx, braincode: str):
 
 @bot.command(name="check_humans")
 async def check_humans(ctx):
+    """Check the contents of the humans table in the database. It can only be run by Committee or Moderators"""
     if ctx.channel.name != "bot-commands":
         await ctx.send("This command can only be used in the `#bot-commands` channel.")
         return
 
-    """Check the contents of the humans table in the database."""
+    
     db_path = "database.db"  # Path to your database
 
     try:
@@ -261,11 +264,12 @@ async def check_humans(ctx):
 
 @bot.command(name="check_zombies")
 async def check_zombies(ctx):
+    """Check the contents of the zombies table in the database. Can only be run by Committee or Mods"""
     if ctx.channel.name != "bot-commands":
         await ctx.send("This command can only be used in the `#bot-commands` channel.")
         return
 
-    """Check the contents of the humans table in the database."""
+    
     db_path = "database.db"  # Path to your database
 
     try:
@@ -298,7 +302,7 @@ async def check_zombies(ctx):
         
 @bot.command(name="revive")
 async def revive(ctx, braincode: str):
-    """Revives a player based on their braincode and returns them to the Humans."""
+    """Revives a player based on their braincode and returns them to the Humans. Can only be run by Mods or Committee"""
     try:
         await ctx.message.delete()  # Deletes the message that triggered the command
     except discord.Forbidden:
@@ -383,6 +387,7 @@ async def revive(ctx, braincode: str):
 
 @bot.command(name="reset")
 async def reset(ctx):
+    """ Resets the entire game, restoring all joined players to Human and issuing new braincodes. Only run by Mods or Committee"""
     if ctx.channel.name != "bot-commands":
         await ctx.send("This command can only be used in the `#bot-commands` channel.")
         return
@@ -419,6 +424,8 @@ async def reset(ctx):
 
 @bot.command(name="end")
 async def end(ctx):
+
+    """ Ends the game. Can only be run by Mods or Committee"""
     # Ensure the command is run in the correct channel
     if ctx.channel.name != "bot-commands":
         await ctx.send("You cannot stop the bot from this channel.")
@@ -449,7 +456,8 @@ async def end(ctx):
     user_ids = {int(user_id[0]) for user_id in user_ids_table1 + user_ids_table2}
 
     if not user_ids:
-        await ctx.send("No users found in the database. Nothing to clean.")
+        await ctx.send("No users found in the database. Nothing to clean. Shutting down Tagger")
+        await bot.close()
         return
 
     # Iterate over the user IDs and remove roles
