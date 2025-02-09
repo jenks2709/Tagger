@@ -84,11 +84,11 @@ async def join(ctx, first_name: str = None, last_name: str = None):
                 pass
 
         try:
-            await member.send(f"Your braincode is: {braincode}")
+            await member.send(f"Your braincode is: **`{braincode}`**\n*Keep it secret, Keep it safe!*")
         except discord.Forbidden:
             await ctx.send("Failed to send DM. Please check your privacy settings.")
     else:
-        await ctx.send("You must use this command in the #join channel")
+        await ctx.send("You must use this command in the `#join` channel")
 
 @bot.command(name="check_braincode")
 async def check_braincode(ctx):
@@ -114,7 +114,7 @@ async def check_braincode(ctx):
         await ctx.send(f"{ctx.author.mention}, you do not have an associated braincode.")
     else:
         braincode = result[0]  # Extract the braincode from the result
-        await ctx.author.send(f"{ctx.author.mention}, your braincode is: `{braincode}`")
+        await ctx.author.send(f"{ctx.author.mention}, your braincode is: **`{braincode}`**")
 
 
 @bot.command(name="tag")
@@ -130,7 +130,7 @@ async def tag(ctx, braincode: str):
     except discord.Forbidden:
         await ctx.send("I do not have permission to delete messages.")
     if ctx.channel.name != "zombie-chat":
-        await ctx.send("This command must be used in #zombie-chat")
+        await ctx.send("This command must be used in `#zombie-chat`")
         return
 
     # Connect to the human database
@@ -138,13 +138,13 @@ async def tag(ctx, braincode: str):
         conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
 
-        # Query the human database for the player_id associated with the braincode
-        cursor.execute("SELECT player_id, braincode, first_name, last_name FROM humans WHERE braincode = ?", (braincode,))
+        # Query the human database for the player_id associated with the braincodetag"
+        cursor.execute("SELECT player_id, braincode, first_name, last_name FROM humans WHERE LOWER(braincode) = ?", (braincode.lower(),))
         result = cursor.fetchone()
         
 
     except sqlite3.Error as e:
-        await ctx.send(f"Database error: {e}")
+        await ctx.send(f"Database error: `{e}`")
         return
 
     if not result:
@@ -164,7 +164,7 @@ async def tag(ctx, braincode: str):
     zombie_chat_channel = discord.utils.get(guild.text_channels, name="zombie-chat")
 
     cursor.execute("INSERT OR REPLACE INTO zombies (player_id, braincode, first_name, last_name) VALUES (?, ?, ?, ?)", (member.id, braincode, first_name, last_name))
-    cursor.execute("DELETE FROM humans WHERE braincode = ?", (braincode,))
+    cursor.execute("DELETE FROM humans WHERE LOWER(braincode) = ?", (braincode.lower(),))
     conn.commit()
     conn.close()
 
@@ -205,13 +205,13 @@ async def tag(ctx, braincode: str):
         else:
             await ctx.send(f"{member.mention} is already a Zombie.")
     except Exception as e:
-        await ctx.send(f"An error occurred while tagging: {e}")
+        await ctx.send(f"An error occurred while tagging: `{e}`")
 
 
 @bot.command(name="check_humans")
 async def check_humans(ctx):
     if ctx.channel.name != "bot-commands":
-        await ctx.send("This command can only be used in the bot-commands channel.")
+        await ctx.send("This command can only be used in the `#bot-commands` channel.")
         return
 
     """Check the contents of the humans table in the database."""
@@ -241,14 +241,14 @@ async def check_humans(ctx):
         await ctx.send(response)
 
     except sqlite3.OperationalError as e:
-        await ctx.send(f"Database error: {e}")
+        await ctx.send(f"Database error: `{e}`")
     except Exception as e:
-        await ctx.send(f"An unexpected error occurred: {e}")
+        await ctx.send(f"An unexpected error occurred: `{e}`")
 
 @bot.command(name="check_zombies")
 async def check_zombies(ctx):
     if ctx.channel.name != "bot-commands":
-        await ctx.send("This command can only be used in the bot-commands channel.")
+        await ctx.send("This command can only be used in the `#bot-commands` channel.")
         return
 
     """Check the contents of the humans table in the database."""
@@ -278,9 +278,9 @@ async def check_zombies(ctx):
         await ctx.send(response)
 
     except sqlite3.OperationalError as e:
-        await ctx.send(f"Database error: {e}")
+        await ctx.send(f"Database error: `{e}`")
     except Exception as e:
-        await ctx.send(f"An unexpected error occurred: {e}")
+        await ctx.send(f"An unexpected error occurred: `{e}`")
         
 @bot.command(name="revive")
 async def revive(ctx, braincode: str):
@@ -291,14 +291,14 @@ async def revive(ctx, braincode: str):
         await ctx.send("I do not have permission to delete messages.")
 
     if ctx.channel.name != "bot-commands":
-        await ctx.send("This command must be used in the #bot-commands channel.")
+        await ctx.send("This command must be used in the `#bot-commands` channel.")
         return
 
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
     # Check if the braincode exists in the 'zombie' table ()
-    cursor.execute("SELECT player_id, first_name, last_name FROM zombies WHERE braincode = ?", (braincode,))
+    cursor.execute("SELECT player_id, first_name, last_name FROM zombies WHERE LOWER(braincode) = ?", (braincode.lower(),))
     result = cursor.fetchone()
 
     if not result:
@@ -338,7 +338,7 @@ async def revive(ctx, braincode: str):
             new_braincode = "".join(random.sample(words, 3))
 
             # Remove the player from the 'Zombie' table and add them back to 'Humans'
-            cursor.execute("DELETE FROM zombies WHERE braincode = ?", (braincode,))
+            cursor.execute("DELETE FROM zombies WHERE LOWER(braincode) = ?", (braincode.lower(),))
             cursor.execute("""
                 INSERT OR REPLACE INTO humans (player_id, braincode, first_name, last_name) 
                 VALUES (?, ?, ?, ?)
@@ -357,20 +357,20 @@ async def revive(ctx, braincode: str):
             await ctx.send(f"Player has been revived successfully")
 
             try:
-                await member.send(f"You have been revived! Your new braincode is: {new_braincode}")
+                await member.send(f"**You have been revived!**\n Your new braincode is: **`{new_braincode}`**\n*Keep it secret, keep it safe!*")
             except discord.Forbidden:
                 return
         else:
             await ctx.send(f"{member.mention} is not an Zombie.")
     except Exception as e:
-        await ctx.send(f"An error occurred while reviving: {e}")
+        await ctx.send(f"An error occurred while reviving: `{e}`")
     finally:
         conn.close()
 
 @bot.command(name="reset")
 async def reset(ctx):
     if ctx.channel.name != "bot-commands":
-        await ctx.send("This command can only be used in the bot-commands channel.")
+        await ctx.send("This command can only be used in the `#bot-commands` channel.")
         return
 
     guild = ctx.guild
@@ -396,7 +396,7 @@ async def reset(ctx):
             braincode = "".join(random.sample(words, 3))
             cursor.execute("INSERT INTO humans (player_id, braincode) VALUES (?, ?)", (str(member.id), braincode))
             try:
-                await member.send(f"Your new braincode is: {braincode}")
+                await member.send(f"Your new braincode is: **`{braincode}`**\n*Keep it secret, keep it safe!*")
             except discord.Forbidden:
                 await ctx.send(f"Could not DM {member.display_name}.")
     conn.commit()
@@ -447,7 +447,7 @@ async def end(ctx):
             except discord.Forbidden:
                 await ctx.send(f"Could not remove roles for {member.display_name}.")
             except Exception as e:
-                await ctx.send(f"An error occurred while removing roles: {e}")
+                await ctx.send(f"An error occurred while removing roles: `{e}`")
 
     # Delete the database file
     try:
@@ -462,6 +462,6 @@ async def end(ctx):
 
 
 # Run the bot
-with open("PLACEHOLDER.txt", "r", encoding="utf-8") as file:
+with open("token.txt", "r", encoding="utf-8") as file:
     TOKEN = file.read()
 bot.run(TOKEN)
