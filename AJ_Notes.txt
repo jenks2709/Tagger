@@ -1,7 +1,3 @@
- HIGH PRIORITY!!!
-1. code a .help function to allow members to get help remembering what command does what
-
-
 Low Priority
 
 dayplay automation function ideas:
