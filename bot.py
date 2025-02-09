@@ -43,6 +43,20 @@ bot = commands.Bot(command_prefix=".", intents=intents)
 async def on_ready():
     print("Tagger is online and ready to run")
 
+@bot.command(name="help")
+async def help(ctx):
+    """Displays a list of all commands and their descriptions."""
+    help_message = "**Available Commands:**\n"
+    if ctx.channel.name != "tagger-help":
+        ctx.send("This command can only be used in the '#tagger-help' channel")
+        return
+    for command in bot.commands:
+        if command.help:  # Only include commands with descriptions
+            help_message += f"`.{command.name}` - {command.help}\n"
+        else:
+            help_message += f"`.{command.name}` - *(No description available)*\n"
+    
+    await ctx.send(help_message)
 
 @bot.command()
 async def join(ctx, first_name: str = None, last_name: str = None):
