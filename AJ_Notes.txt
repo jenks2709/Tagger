@@ -1,5 +1,3 @@
-Low Priority
-
 dayplay automation function ideas:
  .release
  .claim
