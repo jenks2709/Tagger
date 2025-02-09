@@ -138,8 +138,8 @@ async def tag(ctx, braincode: str):
         conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
 
-        # Query the human database for the player_id associated with the braincode
-        cursor.execute("SELECT player_id, braincode, first_name, last_name FROM humans WHERE braincode = ?", (braincode,))
+        # Query the human database for the player_id associated with the braincodetag"
+        cursor.execute("SELECT player_id, braincode, first_name, last_name FROM humans WHERE LOWER(braincode) = ?", (braincode.lower(),))
         result = cursor.fetchone()
         
 
@@ -164,7 +164,7 @@ async def tag(ctx, braincode: str):
     zombie_chat_channel = discord.utils.get(guild.text_channels, name="zombie-chat")
 
     cursor.execute("INSERT OR REPLACE INTO zombies (player_id, braincode, first_name, last_name) VALUES (?, ?, ?, ?)", (member.id, braincode, first_name, last_name))
-    cursor.execute("DELETE FROM humans WHERE braincode = ?", (braincode,))
+    cursor.execute("DELETE FROM humans WHERE LOWER(braincode) = ?", (braincode.lower(),))
     conn.commit()
     conn.close()
 
@@ -298,7 +298,7 @@ async def revive(ctx, braincode: str):
     cursor = conn.cursor()
 
     # Check if the braincode exists in the 'zombie' table ()
-    cursor.execute("SELECT player_id, first_name, last_name FROM zombies WHERE braincode = ?", (braincode,))
+    cursor.execute("SELECT player_id, first_name, last_name FROM zombies WHERE LOWER(braincode) = ?", (braincode.lower(),))
     result = cursor.fetchone()
 
     if not result:
@@ -338,7 +338,7 @@ async def revive(ctx, braincode: str):
             new_braincode = "".join(random.sample(words, 3))
 
             # Remove the player from the 'Zombie' table and add them back to 'Humans'
-            cursor.execute("DELETE FROM zombies WHERE braincode = ?", (braincode,))
+            cursor.execute("DELETE FROM zombies WHERE LOWER(braincode) = ?", (braincode.lower(),))
             cursor.execute("""
                 INSERT OR REPLACE INTO humans (player_id, braincode, first_name, last_name) 
                 VALUES (?, ?, ?, ?)
