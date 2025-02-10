@@ -4,7 +4,7 @@ dayplay automation function ideas:
  .check_owner
  .victor
  .end_dayplay
- .
+ .check_rules
 
 		Dayplay Automation Development notes:
 
