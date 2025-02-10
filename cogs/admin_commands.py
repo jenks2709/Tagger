@@ -17,7 +17,7 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
     @commands.command(name="check_humans")
     async def check_humans(self, ctx):
         """Check the contents of the humans table in the database."""
-        if ctx.channel.name != "bot-test":
+        if ctx.channel.name != "tagger-commands":
             await ctx.send("This command can only be used in `#bot-commands`.")
             return
 
@@ -46,7 +46,7 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
     @commands.command(name="check_zombies")
     async def check_zombies(self, ctx):
         """Check the contents of the zombies table in the database."""
-        if ctx.channel.name != "bot-test":
+        if ctx.channel.name != "tagger-commands":
             await ctx.send("This command can only be used in `#bot-commands`.")
             return
 
@@ -80,7 +80,7 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
         except discord.Forbidden:
             await ctx.send("I do not have permission to delete messages.")
 
-        if ctx.channel.name != "bot-test":
+        if ctx.channel.name != "tagger-commands":
             await ctx.send("This command must be used in `#bot-commands`.")
             return
 
@@ -156,7 +156,7 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
     @commands.command(name="reset")
     async def reset(self, ctx):
         """Resets the game, restoring all players to Human and issuing new braincodes."""
-        if ctx.channel.name != "bot-test":
+        if ctx.channel.name != "tagger-commands":
             await ctx.send("This command can only be used in `#bot-commands`.")
             return
 
