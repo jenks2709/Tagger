@@ -23,7 +23,7 @@ class ZombieCommands(commands.Cog, name="Zombie Commands"):
         except discord.Forbidden:
             await ctx.send("I do not have permission to delete messages.")
 
-        if ctx.channel.name != "bot-test":
+        if ctx.channel.name != "zombie-chat":
             await ctx.send("This command must be used in `#zombie-chat`")
             return
 
