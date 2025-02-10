@@ -29,7 +29,7 @@ class HumanCommands(commands.Cog, name="Human Commands"):
             await ctx.message.delete()
         except discord.Forbidden:
             await ctx.send("I do not have permission to delete messages.")
-        if ctx.channel.name == "bot-test":
+        if ctx.channel.name == "join":
             guild = ctx.guild
             member = ctx.author
             human_role = discord.utils.get(guild.roles, name="Human")
