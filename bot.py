@@ -3,9 +3,10 @@ from discord.ext import commands
 import random
 import sqlite3
 import os
+import asyncio
 
 # Load the list of words from words.txt
-with open("words.txt", "r") as f:
+with open("files/words.txt", "r") as f:
     words = [line.strip() for line in f.readlines()]
 
 # Database setup
@@ -36,6 +37,7 @@ intents.messages = True
 intents.guilds = True
 intents.members = True
 intents.message_content = True
+
 bot = commands.Bot(command_prefix=".", intents=intents)
 
 #Human, Zombie and Spectator count variable set up
@@ -62,428 +64,29 @@ async def update_zombie_count():
     cursor.execute("SELECT COUNT(*) FROM zombies")
     zombie_count = cursor.fetchone()[0]  # Update the global variable
     conn.close()
-    
+
+#Cog set up
+COGS = ["cogs.human_commands", "cogs.dayplay_commands", "cogs.zombie_commands", "cogs.admin_commands", "cogs.game_commands"]
+async def load_cogs():
+    """Loads all cogs from the list"""
+    for cog in COGS:
+        try:
+            await bot.load_extension(cog)
+            print(f"✅ Successfully loaded {cog}")
+        except Exception as e:
+            print(f"❌ Failed to load {cog}: {e}")
+
 @bot.event
 async def on_ready():
+    await load_cogs()
     print("Tagger is online, running and ready for commands")
-
-@bot.command(name="tagger_help")
-async def tagger_help(ctx):
-    """Displays a list of all commands and their descriptions."""
-    help_message = "**Available Commands:**\n"
-    if ctx.channel.name != "tagger-help":
-        ctx.send("This command can only be used in the '#tagger-help' channel")
-        return
-    for command in bot.commands:
-        if command.help:  # Only include commands with descriptions
-            help_message += f"`.{command.name}` - {command.help}\n"
-        else:
-            help_message += f"`.{command.name}` - *(No description available)*\n"
-    
-    await ctx.send(help_message)
-
-@bot.command()
-async def join(ctx, first_name: str = None, last_name: str = None):
-    """Assigns the 'Human' role, generates a braincode, and optionally changes the player's nickname. This command is run by typing '.join' into the '#-join' channel."""
-    try:
-        await ctx.message.delete()
-    except discord.Forbidden:
-        await ctx.send("I do not have permission to delete messages.")
-    if ctx.channel.name == "join":
-        guild = ctx.guild
-        member = ctx.author
-        human_role = discord.utils.get(guild.roles, name="Human")
-        zombie_role = discord.utils.get(guild.roles, name="Zombie")
-
-        if not human_role:
-            await ctx.send("'Human' role does not exist. Please create it and try again.")
-            return
-
-        if human_role in member.roles or zombie_role in member.roles:
-            await ctx.send("You have already joined the game.")
-            return
-
-        await member.add_roles(human_role)
-
-        braincode = "".join(random.sample(words, 3))
-        # Insert player info into the database
-        conn = sqlite3.connect("database.db")
-        cursor = conn.cursor()   
-        cursor.execute("""
-            INSERT OR REPLACE INTO humans (player_id, braincode, first_name, last_name) 
-            VALUES (?, ?, ?, ?)
-        """, (str(member.id), braincode, first_name, last_name))
-        conn.commit()
-        conn.close()
-        if first_name and last_name:
-            try:
-                await member.edit(nick=f"{first_name} {last_name}")
-            except discord.Forbidden:
-                pass
-
-        try:
-            await member.send(f"Your braincode is: **`{braincode}`**\n*Keep it secret, Keep it safe!*")
-        except discord.Forbidden:
-            await ctx.send("Failed to send DM. Please check your privacy settings.")
-        await update_human_count()
-    else:
-        await ctx.send("You must use this command in the `#join` channel")
-
-@bot.command(name="check_braincode")
-async def check_braincode(ctx):
-    """ This command will resend a DM containing your braincode. This command is run by typing '.check_braincode' into any channel"""
-    try:
-        await ctx.message.delete()
-    except discord.Forbidden:
-        await ctx.send("I do not have permission to delete messages.")
-    
-    # Database setup (ensure the connection is open)
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
-
-    # Get the user_id of the author who ran the command
-    player_id = str(ctx.author.id)  # Convert user ID to string since it's stored as TEXT
-
-    # Query the database to retrieve the braincode for the player_id
-    cursor.execute("SELECT braincode FROM humans WHERE player_id = ?", (player_id,))
-    result = cursor.fetchone()
-    conn.close()
-
-    # Check if a braincode exists for the user
-    if not result:
-        await ctx.send(f"{ctx.author.mention}, you do not have an associated braincode.")
-    else:
-        braincode = result[0]  # Extract the braincode from the result
-        await ctx.author.send(f"{ctx.author.mention}, your braincode is: **`{braincode}`**")
-
-
-@bot.command(name="tag")
-async def tag(ctx, braincode: str):
-    """
-    Handles the tagging process, converting a Human into a Zombie, using the braincode given in the command.
-    This command is run by typing '.tag' followed by the braincode needed into '#zombie-chat'.
-    Example: '.tag braincode'
-    """
-    
-    
-    try:
-        await ctx.message.delete()  # Deletes the message that triggered the command
-    except discord.Forbidden:
-        await ctx.send("I do not have permission to delete messages.")
-    if ctx.channel.name != "zombie-chat":
-        await ctx.send("This command must be used in `#zombie-chat`")
-        return
-
-    # Connect to the human database
-    try:
-        conn = sqlite3.connect("database.db")
-        cursor = conn.cursor()
-
-        # Query the human database for the player_id associated with the braincodetag"
-        cursor.execute("SELECT player_id, braincode, first_name, last_name FROM humans WHERE LOWER(braincode) = ?", (braincode.lower(),))
-        result = cursor.fetchone()
-        
-
-    except sqlite3.Error as e:
-        await ctx.send(f"Database error: `{e}`")
-        return
-
-    if not result:
-        await ctx.send(f"No player found with that braincode.")
-        return
-
-    # Extract the player_id from the database result
-    player_id = result[0]
-    first_name = result[2]
-    last_name = result[3]
-
-    # Retrieve the member object from the player_id
-    guild = ctx.guild
-    member = guild.get_member(int(player_id))  # Convert player_id to an integer if stored as TEXT
-    tagger = ctx.author
-    human_chat_channel = discord.utils.get(guild.text_channels, name="human-chat")
-    zombie_chat_channel = discord.utils.get(guild.text_channels, name="zombie-chat")
-
-    cursor.execute("INSERT OR REPLACE INTO zombies (player_id, braincode, first_name, last_name) VALUES (?, ?, ?, ?)", (member.id, braincode, first_name, last_name))
-    cursor.execute("DELETE FROM humans WHERE LOWER(braincode) = ?", (braincode.lower(),))
-    conn.commit()
-    conn.close()
-
-    if not member:
-        await ctx.send(f"Could not find a player with ID {player_id} in this server.")
-        return
-
-    # Get the "Human" and "Zombie" roles
-    human_role = discord.utils.get(guild.roles, name="Human")
-    zombie_role = discord.utils.get(guild.roles, name="Zombie")
-
-    # Check if the roles exist
-    if not human_role or not zombie_role:
-        await ctx.send("No 'Human' or 'Zombie' roles found. Please create these roles first.")
-        return
-
-    # Remove "Human" role and add "Zombie" role if applicable
-    try:
-        if human_role in member.roles:
-            await member.remove_roles(human_role)
-            await member.add_roles(zombie_role)
-
-            # Load a random message from the .txt file
-            try:
-                with open("death_messages.txt", "r") as f:
-                    messages = [line.strip() for line in f if line.strip()]  # Exclude empty lines
-                tag_message = random.choice(messages) if messages else "The infection spreads further..."
-            except FileNotFoundError:
-                tag_message = "The infection spreads further..."  # Default message if file not found
-            if human_chat_channel:
-                if member.id == 560509176669798440:
-                    gif_path = "badspeed_deployed.gif"
-                    await human_chat_channel.send(f"{member.mention} was tagged!", file=discord.File(gif_path))
-                else:
-                    await human_chat_channel.send(f"{member.mention} was tagged by {tagger.mention}! {tag_message}")
-            if zombie_chat_channel:
-                await ctx.send(f"{member.mention} was tagged by {tagger.mention}{tag_message}!")
-            await update_human_count()
-            await update_zombie_count()
-        else:
-            await ctx.send(f"{member.mention} is already a Zombie.")
-    except Exception as e:
-        await ctx.send(f"An error occurred while tagging: `{e}`")
-
-@bot.command()
-async def how_many_humans(ctx):
-    """Returns the number of Humans in the game"""
-    try:
-        await ctx.message.delete()
-    except discord.Forbidden:
-        pass
-    if human_count == 1:
-        await ctx.send(f"There is **1** Human!")
-    else:
-        await ctx.send(f"There are **{human_count}** Humans!")
-
-@bot.command()
-async def how_many_zombies(ctx):
-    """Returns the number of Zombies in the game"""
-    try:
-        await ctx.message.delete()
-    except discord.Forbidden:
-        pass
-    if zombie_count == 1:
-        await ctx.send(f"There is **1** Zombie!")
-    else:
-        await ctx.send(f"There are **{zombie_count}** Zombies!")
-                           
-    
-@bot.command(name="check_humans")
-
-async def check_humans(ctx):
-    """Check the contents of the humans table in the database. It can only be run by Committee or Moderators"""
-    if ctx.channel.name != "bot-commands":
-        await ctx.send("This command can only be used in the `#bot-commands` channel.")
-        return
-
-    
-    db_path = "database.db"  # Path to your database
-
-    try:
-        # Connect to the database
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-
-        # Fetch all rows from the Helldivers table
-        cursor.execute("SELECT * FROM humans")
-        rows = cursor.fetchall()
-
-        # Prepare the response message
-        if rows:
-            response = "Human Players:\n"
-            for row in rows:
-                response += f"{row}\n"
-        else:
-            response = "There are no Humans."
-
-        # Close the connection
-        conn.close()
-
-        # Send the response
-        await ctx.send(response)
-
-    except sqlite3.OperationalError as e:
-        await ctx.send(f"Database error: `{e}`")
-    except Exception as e:
-        await ctx.send(f"An unexpected error occurred: `{e}`")
-
-@bot.command(name="check_zombies")
-async def check_zombies(ctx):
-    """Check the contents of the zombies table in the database. Can only be run by Committee or Mods"""
-    if ctx.channel.name != "bot-commands":
-        await ctx.send("This command can only be used in the `#bot-commands` channel.")
-        return
-
-    
-    db_path = "database.db"  # Path to your database
-
-    try:
-        # Connect to the database
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-
-        # Fetch all rows from the Zombies table
-        cursor.execute("SELECT * FROM zombies")
-        rows = cursor.fetchall()
-
-        # Prepare the response message
-        if rows:
-            response = "Zombie Players:\n"
-            for row in rows:
-                response += f"{row}\n"
-        else:
-            response = "There are no Zombies."
-
-        # Close the connection
-        conn.close()
-
-        # Send the response
-        await ctx.send(response)
-
-    except sqlite3.OperationalError as e:
-        await ctx.send(f"Database error: `{e}`")
-    except Exception as e:
-        await ctx.send(f"An unexpected error occurred: `{e}`")
-        
-@bot.command(name="revive")
-async def revive(ctx, braincode: str):
-    """Revives a player based on their braincode and returns them to the Humans. Can only be run by Mods or Committee"""
-    try:
-        await ctx.message.delete()  # Deletes the message that triggered the command
-    except discord.Forbidden:
-        await ctx.send("I do not have permission to delete messages.")
-
-    if ctx.channel.name != "bot-commands":
-        await ctx.send("This command must be used in the `#bot-commands` channel.")
-        return
-
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
-
-    # Check if the braincode exists in the 'zombie' table ()
-    cursor.execute("SELECT player_id, first_name, last_name FROM zombies WHERE LOWER(braincode) = ?", (braincode.lower(),))
-    result = cursor.fetchone()
-
-    if not result:
-        await ctx.send("No player found with that service number, or the player is not dead.")
-        conn.close()
-        return
-
-    # Extract player information
-    player_id, first_name, last_name = result
-
-    # Retrieve the member object from the player_id
-    guild = ctx.guild
-    member = guild.get_member(int(player_id))
-    
-    if not member:
-        await ctx.send(f"Could not find the player with ID {player_id} in this server.")
-        conn.close()
-        return
-
-    # Get the "Human" and "Zombie" roles
-    human_role = discord.utils.get(guild.roles, name="Human")
-    zombie_role = discord.utils.get(guild.roles, name="Zombie")
-
-    # Check if roles exist
-    if not human_role or not zombie_role:
-        await ctx.send("Please make sure 'Human' and 'Zombie' roles exist on the server.")
-        conn.close()
-        return
-
-    # Remove "Zombie" role and add "Human" role
-    try:
-        if zombie_role in member.roles:
-            await member.remove_roles(zombie_role)
-            await member.add_roles(human_role)
-
-            # Generate a new 6-digit service number for the revived player
-            new_braincode = "".join(random.sample(words, 3))
-
-            # Remove the player from the 'Zombie' table and add them back to 'Humans'
-            cursor.execute("DELETE FROM zombies WHERE LOWER(braincode) = ?", (braincode.lower(),))
-            cursor.execute("""
-                INSERT OR REPLACE INTO humans (player_id, braincode, first_name, last_name) 
-                VALUES (?, ?, ?, ?)
-            """, (member.id, new_braincode, first_name, last_name))
-            conn.commit()
-
-            # Notify in relevant channels and DM the player
-            human_chat_channel = discord.utils.get(guild.text_channels, name="human-chat")
-            zombie_chat_channel = discord.utils.get(guild.text_channels, name="zombie chat")
-            
-            if human_chat_channel:
-                await human_chat_channel.send(f"{member.mention} has been revived and is now a Human again!")
-            if zombie_chat_channel:
-                await zombie_chat_channel.send(f"{member.mention} has been revived and is no longer a Zombie!")
-
-            await ctx.send(f"Player has been revived successfully")
-            await update_human_count()
-            await update_zombie_count()
-
-            try:
-                await member.send(f"**You have been revived!**\n Your new braincode is: **`{new_braincode}`**\n*Keep it secret, keep it safe!*")
-            except discord.Forbidden:
-                return
-        else:
-            await ctx.send(f"{member.mention} is not an Zombie.")
-    except Exception as e:
-        await ctx.send(f"An error occurred while reviving: `{e}`")  
-    finally:
-        conn.close()
-
-@bot.command(name="reset")
-async def reset(ctx):
-    """ Resets the entire game, restoring all joined players to Human and issuing new braincodes. Only run by Mods or Committee"""
-    if ctx.channel.name != "bot-commands":
-        await ctx.send("This command can only be used in the `#bot-commands` channel.")
-        return
-
-    guild = ctx.guild
-    human_role = discord.utils.get(guild.roles, name="Human")
-    zombie_role = discord.utils.get(guild.roles, name="Zombie")
-
-    for member in guild.members:
-        try:
-            if zombie_role in member.roles:
-                await member.remove_roles(zombie_role)
-                await member.add_roles(human_role)
-        except discord.Forbidden:
-            await ctx.send(f"Could not reset roles for {member.display_name}.")
-
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM humans")
-    cursor.execute("DELETE FROM zombies")
-    conn.commit()
-
-    for member in guild.members:
-        if human_role in member.roles:
-            braincode = "".join(random.sample(words, 3))
-            cursor.execute("INSERT INTO humans (player_id, braincode) VALUES (?, ?)", (str(member.id), braincode))
-            try:
-                await member.send(f"Your new braincode is: **`{braincode}`**\n*Keep it secret, keep it safe!*")
-            except discord.Forbidden:
-                await ctx.send(f"Could not DM {member.display_name}.")
-    conn.commit()
-    conn.close()
-    await ctx.send("Game has been reset.")
-    await update_human_count()
-    await update_zombie_count()
 
 @bot.command(name="end")
 async def end(ctx):
 
     """ Ends the game. Can only be run by Mods or Committee"""
     # Ensure the command is run in the correct channel
-    if ctx.channel.name != "bot-commands":
+    if ctx.channel.name != "bot-test":
         await ctx.send("You cannot stop the bot from this channel.")
         return
 
@@ -537,9 +140,8 @@ async def end(ctx):
     # Shut down the bot
     await ctx.send("Tagger has been shut down, roles removed, and database wiped.")
     await bot.close()
-
-
+    
 # Run the bot
-with open("token.txt", "r", encoding="utf-8") as file:
+with open("files/token.txt", "r", encoding="utf-8") as file:
     TOKEN = file.read()
 bot.run(TOKEN)
