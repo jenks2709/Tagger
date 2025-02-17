@@ -190,13 +190,65 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
         conn.close()
 
         await ctx.send("Game has been reset.")
+    @commands.command(name="end")
+    async def end(self, ctx):
 
-        # ✅ FIX: Update the human and zombie counts using GameCommands Cog
-        game_cog = self.bot.get_cog("Game Commands")
-        if game_cog:
-            await game_cog.update_counts()
-        else:
-            await ctx.send("Error: Game Commands cog not found.")
+    """ Ends the game. Can only be run by Mods or Committee"""
+    # Ensure the command is run in the correct channel
+    if ctx.channel.name != "bot-test":
+        await ctx.send("You cannot stop the bot from this channel.")
+        return
+
+    guild = ctx.guild
+    human_role = discord.utils.get(guild.roles, name="Human")
+    zombie_role = discord.utils.get(guild.roles, name="Zombie")
+
+    db_path = "database.db"
+    if not os.path.exists(db_path):
+        await ctx.send("Database file not found. Nothing to clean.")
+        return
+
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    # Query both tables for user IDs
+    cursor.execute("SELECT player_id FROM humans")
+    user_ids_table1 = cursor.fetchall()
+
+    cursor.execute("SELECT player_id FROM zombies") 
+    user_ids_table2 = cursor.fetchall()
+
+    conn.close()
+
+    # Combine and deduplicate user IDs from both tables
+    user_ids = {int(user_id[0]) for user_id in user_ids_table1 + user_ids_table2}
+
+    if not user_ids:
+        await ctx.send("No users found in the database. Nothing to clean. Shutting down Tagger")
+        await self.bot.close()
+        return
+
+    # Iterate over the user IDs and remove roles
+    for user_id in user_ids:
+        member = guild.get_member(user_id)
+        if member:
+            try:
+                await member.remove_roles(human_role, zombie_role)
+            except discord.Forbidden:
+                await ctx.send(f"Could not remove roles for {member.display_name}.")
+            except Exception as e:
+                await ctx.send(f"An error occurred while removing roles: `{e}`")
+
+    # Delete the database file
+    try:
+        os.remove(db_path)
+        await ctx.send("Database wiped successfully.")
+    except Exception as e:
+        await ctx.send(f"Failed to delete database: {e}")
+
+    # Shut down the bot
+    await ctx.send("Tagger has been shut down, roles removed, and database wiped.")
+    await self.bot.close()
 
 async def setup(bot):
     await bot.add_cog(AdminCommands(bot))
