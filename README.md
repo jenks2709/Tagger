@@ -8,9 +8,18 @@ Run `bot.py`
 
 The bot should show as "online" in discord
 
-## Dependencies:
-* python
+## Dependencies
+
+The bot requires the following dependencies:
+
+* Python
 * discord.py
-* [matplotlib](https://matplotlib.org/)
-* [networkx](https://networkx.org/documentation/stable/index.html)
+* matplotlib
+* networkx
 * pydot
+
+To install all dependencies from requirements.txt:
+
+```bash
+pip install -r requirements.txt
+```
