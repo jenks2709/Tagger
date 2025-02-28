@@ -5,6 +5,19 @@ import sqlite3
 import os
 import asyncio
 
+# First try to get token from environment variable
+TOKEN = os.environ.get("DISCORD_TOKEN")
+
+# If not found in environment, fall back to token.txt
+if not TOKEN:
+    try:
+        with open("files/token.txt", "r", encoding="utf-8") as file:
+            TOKEN = file.read().strip()
+        print("Token loaded from files/token.txt")
+    except FileNotFoundError:
+        print("Error: Discord token not found! Set DISCORD_TOKEN environment variable or create files/token.txt")
+        exit(1)
+
 # Load the list of words from words.txt
 with open("files/words.txt", "r") as f:
     words = [line.strip() for line in f.readlines()]
@@ -81,9 +94,4 @@ async def on_ready():
     await load_cogs()
     print("Tagger is online, running and ready for commands")
 
-
-    
-# Run the bot
-with open("files/token.txt", "r", encoding="utf-8") as file:
-    TOKEN = file.read()
 bot.run(TOKEN)
