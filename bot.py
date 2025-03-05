@@ -81,6 +81,14 @@ async def on_ready():
     await load_cogs()
     print("Tagger is online, running and ready for commands")
 
+channel_id = 670630369179074570
+channel = bot.get_channel(channel_id)
+
+if channel:
+    await channel.send("Ay-Ay-Ay-Ay-Ay! It's time to get ready for duty cadets! Join the game now!")
+else:
+    print(f"could not find channel")
+
 
     
 # Run the bot
