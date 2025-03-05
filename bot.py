@@ -75,11 +75,88 @@ async def load_cogs():
             print(f"✅ Successfully loaded {cog}")
         except Exception as e:
             print(f"❌ Failed to load {cog}: {e}")
+async def dayplay_announcements(ctx):
+    """Automates dayplay announcements"""
+    channel_id = 670630369179074570
+    role_id = 501688609104199680
+    role = ctx.guild.get_role(role_id)
+    channel = bot.get_channel(channel_id)
+
+    timestamps = []
+       
+    if channel:
+        for target_time in sorted(timestamps):
+            current_time = time.time()
+            wait_time = target_time - current_time
+            if wait_time > 0:
+                await asyncio.sleep(wait_time)
+            else:
+                await channel.send(f"{role.mention} MESSAGE")
+    else:
+        print(f"Channel not found")
+
+async def human_mission_announcements(ctx):
+    """Automates Mission briefing announcements"""
+    channel_id = 1326527538369134672
+    role_id = 499535434263691265
+    role = ctx.guild.get_role(role_id)
+    channel = bot.get_channel(channel_id)
+
+    timestamps = []
+       
+    if channel:
+        for target_time in sorted(timestamps):
+            current_time = time.time()
+            wait_time = target_time - current_time
+            if wait_time > 0:
+                await asyncio.sleep(wait_time)
+            else:
+                await channel.send(f"{role.mention} MESSAGE")
+    else:
+        print(f"Channel not found")
+
+async def zombie_mission_announcements(ctx):
+    """Automates Mission briefing announcements"""
+    channel_id = 1326527656971341864
+    role_id = 501348192131219466
+    role = ctx.guild.get_role(role_id)
+    channel = bot.get_channel(channel_id)
+
+    timestamps = []
+       
+    if channel:
+        for target_time in sorted(timestamps):
+            current_time = time.time()
+            wait_time = target_time - current_time
+            if wait_time > 0:
+                await asyncio.sleep(wait_time)
+            else:
+                await channel.send(f"{role.mention} MESSAGE")
+    else:
+        print(f"Channel not found")
+
+async def announce_ready(ctx):
+    channel_id = 1326527446631055410
+    channel = bot.get_channel(channel_id)
+    role_id = 1346789781849378856
+    role = ctx.guild.get_role(role_id)  
+        
+    if channel:
+        await channel.send("Ay-Ay-Ay-Ay-Ay! It's time to get ready for duty cadets! Join the game now!{role.mention}")
+    else:
+        print(f"could not find channel")
+
 
 @bot.event
 async def on_ready():
     await load_cogs()
-    print("Tagger is online, running and ready for commands")
+    await announce_ready()
+    await dayplay_announcements()
+    await human_mission_announcements()
+    await zombie_mission_announcements()
+    
+    
+    
 
 
     
