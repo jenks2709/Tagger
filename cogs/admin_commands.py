@@ -18,7 +18,7 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
     async def check_humans(self, ctx):
         """Check the contents of the humans table in the database."""
         if ctx.channel.name != "tagger-commands":
-            await ctx.send("This command can only be used in `#bot-commands`.")
+            await ctx.send("This command can only be used in `#tagger-commands`.")
             return
 
         db_path = "database.db"
@@ -47,7 +47,7 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
     async def check_zombies(self, ctx):
         """Check the contents of the zombies table in the database."""
         if ctx.channel.name != "tagger-commands":
-            await ctx.send("This command can only be used in `#bot-commands`.")
+            await ctx.send("This command can only be used in `#tagger-commands`.")
             return
 
         db_path = "database.db"
@@ -81,7 +81,7 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
             await ctx.send("I do not have permission to delete messages.")
 
         if ctx.channel.name != "tagger-commands":
-            await ctx.send("This command must be used in `#bot-commands`.")
+            await ctx.send("This command must be used in `#tagger-commands`.")
             return
 
         conn = sqlite3.connect("database.db")
@@ -157,7 +157,7 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
     async def reset(self, ctx):
         """Resets the game, restoring all players to Human and issuing new braincodes."""
         if ctx.channel.name != "tagger-commands":
-            await ctx.send("This command can only be used in `#bot-commands`.")
+            await ctx.send("This command can only be used in `#tagger-commands`.")
             return
 
         guild = ctx.guild
