@@ -1,0 +1,5 @@
+Location photo posted on the hour, every 2 hours hour from 1000 to 1800, with the final location being posted at 1600.
+
+Each location is worth a certain amount of points. 
+
+Once a photo of a player has been sent to #dayplay-chat, the control shifts to that team. Whichever team holds the location the longest, gets that number of points.

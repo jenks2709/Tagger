@@ -1,0 +1,12 @@
+dayplay automation function ideas:
+ .release
+ .claim
+ .check_owner
+ .victor
+ .end_dayplay
+ .check_rules
+
+		Dayplay Automation Development notes:
+
+		1. Use BfS dayplay as an example
+		2. 
