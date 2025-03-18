@@ -14,3 +14,4 @@ The bot should show as "online" in discord
 * [matplotlib](https://matplotlib.org/)
 * [networkx](https://networkx.org/documentation/stable/index.html)
 * pydot
+* SQLite3
