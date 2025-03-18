@@ -10,6 +10,7 @@ class GameCommands(commands.Cog, name="Game Commands"):
         self.bot = bot
         self.human_count = 0  # Store count inside the class
         self.zombie_count = 0
+        self.tag_history = []
 
     async def update_counts(self):
         """Updates the human and zombie counts"""
@@ -19,6 +20,16 @@ class GameCommands(commands.Cog, name="Game Commands"):
         self.human_count = cursor.fetchone()[0]  # Store inside class
         cursor.execute("SELECT COUNT(*) FROM zombies")
         self.zombie_count = cursor.fetchone()[0]
+        conn.close()
+
+    async def update_tags(self):
+        """Updates the tag history"""
+        conn = sqlite3.connect("database.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM tags")
+        tags = cursor.fetchall()  # Update the global variable
+        for tag in tags:
+            self.tag_history.append((tag[0], tag[1]))
         conn.close()
 
     @commands.command()
@@ -56,6 +67,19 @@ class GameCommands(commands.Cog, name="Game Commands"):
             await ctx.send(f"There is **1** player!")
         else:
             await ctx.send(f"There are **{player_count}** players!")
+
+    @commands.command()
+    async def tag_history(self, ctx):
+        """Sends a message containing the tag history for this game"""
+        await self.update_tags() #Update the tag history
+        try:
+            await ctx.message.delete()
+        except discord.Forbidden:
+            pass
+        await ctx.send(self.tag_history)
+        
+
+
 
 async def setup(bot):
     await bot.add_cog(GameCommands(bot))

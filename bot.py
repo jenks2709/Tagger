@@ -74,6 +74,15 @@ async def update_zombie_count():
     zombie_count = cursor.fetchone()[0]  # Update the global variable
     conn.close()
 
+async def update_tag_history():
+    """Updates the global tag history from database"""
+    global tag_history
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tags")
+    tag_history = cursor.fetchall  # Update the global variable
+    conn.close()
+
 #Cog set up
 COGS = ["cogs.human_commands", "cogs.dayplay_commands", "cogs.zombie_commands", "cogs.admin_commands", "cogs.game_commands"]
 async def load_cogs():

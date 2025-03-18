@@ -68,7 +68,9 @@ class ZombieCommands(commands.Cog, name="Zombie Commands"):
         # Convert Human to Zombie in the database
         cursor.execute("INSERT OR REPLACE INTO zombies (player_id, braincode, first_name, last_name) VALUES (?, ?, ?, ?)", (member.id, braincode, first_name, last_name))
         cursor.execute("DELETE FROM humans WHERE LOWER(braincode) = ?", (braincode.lower(),))
-        cursor.execute("INSERT OR REPLACE INTO tags (zombie_id, human_id) VALUES (?, ?)", (member.id, tagger.id))
+        
+        #Add tag to history
+        cursor.execute("INSERT INTO tags (zombie_id, human_id) VALUES (?, ?)", (member.id, tagger.id))
         conn.commit()
         conn.close()
 
