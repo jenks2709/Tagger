@@ -76,7 +76,9 @@ class GameCommands(commands.Cog, name="Game Commands"):
             await ctx.message.delete()
         except discord.Forbidden:
             pass
-        await ctx.send(self.tag_history)
+        guild = ctx.guild
+        for tag in self.tag_history:
+            await ctx.send(f"**`{guild.get_member(int(tag[0]))}`** tagged **`{guild.get_member(int(tag[1]))}`**")
         
 
 
