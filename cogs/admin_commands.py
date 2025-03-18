@@ -176,6 +176,7 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
         cursor = conn.cursor()
         cursor.execute("DELETE FROM humans")
         cursor.execute("DELETE FROM zombies")
+        cursor.execute("DELETE FROM tags")
         conn.commit()
 
         for member in guild.members:
