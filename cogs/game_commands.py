@@ -82,7 +82,19 @@ class GameCommands(commands.Cog, name="Game Commands"):
         else:
             for tag in self.tag_history:
                 await ctx.send(f"**`{guild.get_member(int(tag[0]))}`** tagged **`{guild.get_member(int(tag[1]))}`**")
-        
+    @commands.command()
+    async def tag_tree(self, ctx):
+        """Sends an image containing a diagram of the tag history"""
+        await self.update_tags() #Update the tag history
+        try:
+            await ctx.message.delete()
+        except discord.Forbidden:
+            pass
+        try:
+            await ctx.send(file=discord.File('files/tag_graph_image.png'))
+        except FileNotFoundError:
+            await ctx.send("Error: Cannot find tag tree image")
+
 
 
 
