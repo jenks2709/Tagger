@@ -1,2 +1,5 @@
 #the text file containing the bots token
 token.txt
+
+#the cache from importing a file in python (see https://stackoverflow.com/questions/16869024/what-is-pycache for details)
+__pycache__
