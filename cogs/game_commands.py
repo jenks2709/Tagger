@@ -77,8 +77,11 @@ class GameCommands(commands.Cog, name="Game Commands"):
         except discord.Forbidden:
             pass
         guild = ctx.guild
-        for tag in self.tag_history:
-            await ctx.send(f"**`{guild.get_member(int(tag[0]))}`** tagged **`{guild.get_member(int(tag[1]))}`**")
+        if self.tag_history == []:
+            await ctx.send("No tags have occurred so far")
+        else:
+            for tag in self.tag_history:
+                await ctx.send(f"**`{guild.get_member(int(tag[0]))}`** tagged **`{guild.get_member(int(tag[1]))}`**")
         
 
 
