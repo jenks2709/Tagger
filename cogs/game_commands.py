@@ -2,6 +2,12 @@ import discord
 from discord.ext import commands
 import sqlite3
 import os
+# Tag graph imports:
+import networkx as nx
+import matplotlib.pyplot as plt
+import pydot
+from networkx.drawing.nx_pydot import graphviz_layout
+from networkx.readwrite import json_graph
 
 class GameCommands(commands.Cog, name="Game Commands"):
     """Commands that are game-wide like checking human/zombie numbers"""
@@ -31,6 +37,27 @@ class GameCommands(commands.Cog, name="Game Commands"):
         for tag in tags:
             self.tag_history.append((tag[0], tag[1]))
         conn.close()
+
+    async def render_tag_graph(self):
+        """Generates an image containing a graph of the current tag history"""
+        tag_graph = nx.DiGraph()
+        tag_graph.add_edges_from(self.tag_history)
+
+        fig = plt.figure("Tag History", facecolor="#5393f3")
+        fig.set_figwidth(10) # set the width of the diagram to scale with height divided by total nodes 
+        fig.set_figheight(10) # set the height of the diagram to scale with the height of the tag tree
+        fig.suptitle("Tag History", fontsize="xx-large", fontweight="bold")
+        
+        plt.xlabel("RHUL Humans vs Zombies", fontsize="xx-large", color="white")# add a label to the bottom of the diagram
+
+        layout=graphviz_layout(tag_graph, prog="dot") # defines positions of nodes to use a hierarchical layout
+
+        nx.draw_networkx(tag_graph, pos=layout, arrows=True, with_labels=True, arrowsize=25, node_size=900, font_size=20, font_color="#0000cc", node_color="#FFC442", node_shape="h", arrowstyle="->", width=2, edge_color="#5C5CD3") # renders tag graph
+
+        ax = plt.gca()
+        ax.set_facecolor("#FFC442") # sets the graph background color to orange
+
+        plt.savefig("files/tag_graph_image.png", dpi=200) # save the graph to file
 
     @commands.command()
     async def how_many_humans(self, ctx):
@@ -90,10 +117,14 @@ class GameCommands(commands.Cog, name="Game Commands"):
             await ctx.message.delete()
         except discord.Forbidden:
             pass
-        try:
-            await ctx.send(file=discord.File('files/tag_graph_image.png'))
-        except FileNotFoundError:
-            await ctx.send("Error: Cannot find tag tree image")
+        if self.tag_history == []:
+            await ctx.send("Sorry, I can't generate an image if no tags have occurred")
+        else:
+            await self.render_tag_graph()
+            try:
+                await ctx.send(file=discord.File('files/tag_graph_image.png'))
+            except FileNotFoundError:
+                await ctx.send("Error: Cannot find tag tree image")
 
 
 
