@@ -38,10 +38,16 @@ class GameCommands(commands.Cog, name="Game Commands"):
             self.tag_history.append((tag[0], tag[1]))
         conn.close()
 
-    async def render_tag_graph(self):
+    async def render_tag_graph(self, ctx):
         """Generates an image containing a graph of the current tag history"""
+        
+        guild = ctx.guild
+        clean_tag_history = []
+        for tag in self.tag_history:
+            clean_tag_history.append([guild.get_member(int(tag[0])), guild.get_member(int(tag[1]))]) # Convert the userIDs in the tags into human readable usernames
+
         tag_graph = nx.DiGraph()
-        tag_graph.add_edges_from(self.tag_history)
+        tag_graph.add_edges_from(clean_tag_history)
 
         fig = plt.figure("Tag History", facecolor="#5393f3")
         fig.set_figwidth(10) # set the width of the diagram to scale with height divided by total nodes 
@@ -120,7 +126,7 @@ class GameCommands(commands.Cog, name="Game Commands"):
         if self.tag_history == []:
             await ctx.send("Sorry, I can't generate an image if no tags have occurred")
         else:
-            await self.render_tag_graph()
+            await self.render_tag_graph(ctx)
             try:
                 await ctx.send(file=discord.File('files/tag_graph_image.png'))
             except FileNotFoundError:
