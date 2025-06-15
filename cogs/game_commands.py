@@ -75,7 +75,7 @@ class GameCommands(commands.Cog, name="Game Commands"):
             await ctx.send(f"There are **{zombies}** zombies for every **{humans}** human!")
 
     @commands.command()
-    async def map(self, ctx):
+    async def campus_map(self, ctx):
         """Posts a map of the RHUL campus to chat"""
         try:
             await ctx.message.delete()
@@ -86,6 +86,20 @@ class GameCommands(commands.Cog, name="Game Commands"):
                 await ctx.send(file=discord.File('files/campus_map.png'))
             except FileNotFoundError:
                 await ctx.send("Error: Cannot find campus map image")
+
+
+    @commands.command()
+    async def play_area(self, ctx):
+        """Posts a map of the allowed play area to chat"""
+        try:
+            await ctx.message.delete()
+        except discord.Forbidden:
+            pass
+        else:
+            try:
+                await ctx.send(file=discord.File('files/play_area.png'))
+            except FileNotFoundError:
+                await ctx.send("Error: Cannot find play area image")
 
 async def setup(bot):
     await bot.add_cog(GameCommands(bot))
