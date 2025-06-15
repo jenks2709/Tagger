@@ -23,7 +23,7 @@ The bot should show as "online" in discord
 
 The as stated above `bot.py` is the base script, but most of the codebase is stored other in python scripts held in `./cogs/`. These contain the code for specific commands and are split into several scripts based on the commands purpose and which discord users have access to them.
 
-For example `human_commands.py` contains gameplay commands specific to the human team and requires the user to have the `@human` role or another administrative role. 
+For example `human_commands.py` contains gameplay commands specific to the human team and requires the user to have the `human` role or an administrative role such as `moderator`. 
 
 An SQLite3 database is used to store game data and other relevant information, such as player's discord IDs. 
 
