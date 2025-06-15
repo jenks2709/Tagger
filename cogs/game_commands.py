@@ -89,7 +89,7 @@ class GameCommands(commands.Cog, name="Game Commands"):
 
 
     @commands.command()
-    async def play_area(self, ctx):
+    async def estates_map(self, ctx):
         """Posts a map of the allowed play area to chat"""
         try:
             await ctx.message.delete()
