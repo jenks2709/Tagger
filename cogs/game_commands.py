@@ -34,8 +34,11 @@ class GameCommands(commands.Cog, name="Game Commands"):
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM tags")
         tags = cursor.fetchall()  # Update the global variable
-        for tag in tags:
+
+        cursor.execute("DELETE FROM tags") # Delete all tags from the database
+        for tag in tags: # Add tags back to database
             self.tag_history.append((tag[0], tag[1]))
+        
         conn.close()
 
     async def render_tag_graph(self, ctx):
