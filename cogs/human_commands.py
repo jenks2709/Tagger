@@ -40,6 +40,16 @@ class HumanCommands(commands.Cog, name="Human Commands"):
                 await ctx.send("'Human' role does not exist. Please create it and try again.")
                 return
 
+            if not zombie_role:
+                await ctx.send("'Zombie' role does not exist. Please create it and try again.")
+                return
+
+            if not player_role:
+                await ctx.send("'Player' role does not exist. Please create it and try again.")
+                return
+
+
+
             if player_role in member.roles:
                 await ctx.send("You have already joined the game.")
                 return
