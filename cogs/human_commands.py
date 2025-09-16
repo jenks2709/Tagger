@@ -49,7 +49,6 @@ class HumanCommands(commands.Cog, name="Human Commands"):
                 return
 
 
-
             if player_role in member.roles:
                 await ctx.send("You have already joined the game.")
                 return
@@ -63,7 +62,7 @@ class HumanCommands(commands.Cog, name="Human Commands"):
             conn = sqlite3.connect("database.db")
             cursor = conn.cursor()   
             cursor.execute("""
-                INSERT OR REPLACE INTO humans (player_id, braincode, first_name, last_name) 
+                INSERT OR REPLACE INTO players (player_id, braincode, first_name, last_name) 
                 VALUES (?, ?, ?, ?)
             """, (str(member.id), braincode, first_name, last_name))
             conn.commit()

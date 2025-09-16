@@ -230,7 +230,7 @@ class AdminCommands(commands.Cog, name="Admin"):
 
         conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM players")
+        cursor.execute("UPDATE players SET team=humans WHERE team=zombies")
         cursor.execute("DELETE FROM tags")
         conn.commit()
 
@@ -283,6 +283,8 @@ class AdminCommands(commands.Cog, name="Admin"):
         cursor.execute("SELECT player_id FROM players")
         user_ids = cursor.fetchall()
         conn.close()
+
+        # print("ids: "||user_ids)
 
         if not user_ids:
             await ctx.send("No users found in the database. Nothing to clean. Shutting down Tagger")
