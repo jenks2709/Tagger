@@ -213,8 +213,9 @@ class AdminCommands(commands.Cog, name="Admin"):
         guild = ctx.guild
         human_role = discord.utils.get(guild.roles, name="Human")
         zombie_role = discord.utils.get(guild.roles, name="Zombie")
+        player_role = discord.utils.get(guild.roles, name="Player")
 
-        if not human_role or not zombie_role:
+        if not human_role or not zombie_role or not Player:
             await ctx.send("Error: Required roles not found in the server.")
             return
         
