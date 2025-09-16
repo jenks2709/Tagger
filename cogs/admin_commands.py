@@ -229,8 +229,7 @@ class AdminCommands(commands.Cog, name="Admin"):
 
         conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM humans")
-        cursor.execute("DELETE FROM zombies")
+        cursor.execute("DELETE FROM players")
         cursor.execute("DELETE FROM tags")
         conn.commit()
 
