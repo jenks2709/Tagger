@@ -92,6 +92,33 @@ class AdminCommands(commands.Cog, name="Admin"):
         except Exception as e:
             await ctx.send(f"An unexpected error occurred: `{e}`")
 
+    @commands.command(name="check_players")
+    async def check_players(self, ctx):
+        """Check the contents of the zombies table in the database."""
+        if ctx.channel.name != "bot-commands":
+            await ctx.send("This command can only be used in `#bot-commands`.")
+            return
+        db_path = "database.db"
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT player_id, braincode, first_name, last_name, points FROM players")
+            rows = cursor.fetchall()
+            conn.close()
+
+            if rows:
+                response = "**All Players:**\n"
+                for player_id, braincode, first_name, last_name, points in rows:
+                    response += f"- {first_name} {last_name} (ID: {player_id})(Braincode: {braincode})(Points: {points})\n"
+            else:
+                response = "There are no Players."
+
+            await ctx.send(response)
+        except sqlite3.OperationalError as e:
+            await ctx.send(f"Database error: `{e}`")
+        except Exception as e:
+            await ctx.send(f"An unexpected error occurred: `{e}`")    
+
     @commands.command(name="revive")
     async def revive(self, ctx, braincode: str):
         """Revives a player based on their braincode and returns them to the Humans."""
