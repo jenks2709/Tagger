@@ -89,17 +89,15 @@ async def load_cogs():
         except Exception as e:
             print(f"❌ Failed to load {cog}: {e}")
 
-async def announce_ready():
-    channel_id = 
+async def announce_ready(channel_id=None, role_id=None):
     guild = bot.guilds[0]
     channel = guild.get_channel(channel_id)
-    role_id = 
     role = guild.get_role(int(role_id))
         
-    if channel:
-        await channel.send(f"Aye-yi-yi-yi-yi! Alpha-10 ready for action!{role.mention}")
+    if channel and role:
+        await channel.send(f"Aye-yi-yi-yi-yi! Tagger ready for action!{role.mention}")
     else:
-        print(f"could not find channel")
+        print(f"could not find channel and/or role")
 
 
 # List of cogs to ignore
@@ -149,8 +147,7 @@ bot = commands.Bot(command_prefix=".", intents=intents, help_command=CustomHelpC
 async def on_ready():
     await load_cogs()
     print(f"Cogs loaded")
-    await announce_ready()
-
+    await announce_ready() # Enter the desired channel/role here 
     
 # Run the bot
 with open("files/token.txt", "r", encoding="utf-8") as file:
