@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import sqlite3
+import math
 import os
 # Tag graph imports:
 import networkx as nx
@@ -105,6 +106,22 @@ class GameCommands(commands.Cog, name="Game Commands"):
             await ctx.send(f"There are **{player_count}** players!")
 
     @commands.command()
+    async def ratio(self, ctx):
+        """Returns the ratio of Humans to Zombies"""
+        await self.update_counts()  # Update before showing count
+        gcd = math.gcd(self.human_count, self.zombie_count)
+        zombies = self.zombie_count // gcd
+        humans = self.human_count // gcd
+        if self.human_count == self.zombie_count:
+            await ctx.send(f"There is **1** zombie for every **1** human!")
+        elif zombies == 1:
+            await ctx.send(f"There is **1** zombie for every **{humans}** humans!")
+        elif humans == 1:
+            await ctx.send(f"There are **{zombies}** zombies for every **1** human!")
+        else:
+            await ctx.send(f"There are **{zombies}** zombies for every **{humans}** human!")
+
+    @commands.command()
     async def tag_history(self, ctx):
         """Sends a message containing the tag history for this game"""
         await self.update_tags() #Update the tag history
@@ -135,8 +152,32 @@ class GameCommands(commands.Cog, name="Game Commands"):
             except FileNotFoundError:
                 await ctx.send("Error: Cannot find tag tree image")
 
+    @commands.command()
+    async def campus_map(self, ctx):
+        """Posts a map of the RHUL campus to chat"""
+        try:
+            await ctx.message.delete()
+        except discord.Forbidden:
+            pass
+        else:
+            try:
+                await ctx.send(file=discord.File('files/campus_map.png'))
+            except FileNotFoundError:
+                await ctx.send("Error: Cannot find campus map image")
 
 
+    @commands.command()
+    async def estates_map(self, ctx):
+        """Posts a map of the allowed play area to chat"""
+        try:
+            await ctx.message.delete()
+        except discord.Forbidden:
+            pass
+        else:
+            try:
+                await ctx.send(file=discord.File('files/play_area.png'))
+            except FileNotFoundError:
+                await ctx.send("Error: Cannot find play area image")
 
 async def setup(bot):
     await bot.add_cog(GameCommands(bot))
