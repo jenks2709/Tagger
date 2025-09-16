@@ -91,13 +91,17 @@ async def load_cogs():
 
 async def announce_ready(channel_id=None, role_id=None):
     guild = bot.guilds[0]
-    channel = guild.get_channel(channel_id)
-    role = guild.get_role(int(role_id))
-        
-    if channel and role:
-        await channel.send(f"Aye-yi-yi-yi-yi! Tagger ready for action!{role.mention}")
+    if channel_id == None or role_id == None:
+        print("Missing channel_id or role_id, skipping announcement")
     else:
-        print(f"could not find channel and/or role")
+
+        channel = guild.get_channel(channel_id)
+        role = guild.get_role(int(role_id))
+        
+        if channel and role:
+            await channel.send(f"Aye-yi-yi-yi-yi! Tagger ready for action!{role.mention}")
+        else:
+            print(f"could not find channel and/or role")
 
 
 # List of cogs to ignore
