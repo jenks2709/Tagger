@@ -214,10 +214,7 @@ class AdminCommands(commands.Cog, name="Admin"):
                 try:
                     await member.send(f"Your new braincode is: **`{braincode}`**\n*Keep it secret, keep it safe!*")
                 except discord.Forbidden:
-                    await ctx.send(f"Could not DM {member.display_name}.")
-        conn.commit()
-        conn.close()
-                                    
+                    await ctx.send(f"Could not DM {member.display_name}.")                                    
                     cursor.execute("UPDATE players SET braincode = ?, team = ? WHERE player_id =?",(new_braincode, "Human", member.id))
                     conn.commit()
 ##                    # Send the new braincode via DM
@@ -225,11 +222,10 @@ class AdminCommands(commands.Cog, name="Admin"):
 ##                        await member.send(f"Your new braincode is: **`{new_braincode}`**\n*Keep it secret, keep it safe!*")
 ##                    except discord.Forbidden:
 ##                        await ctx.send(f"Could not DM {member.display_name}.")
-                else:
-                    pass
                 
-            except Exception as e:
-                await ctx.send(f"Error processing {member.display_name}: {e}")
+
+        conn.commit()
+        conn.close()
 
 
         await ctx.send("Game has been reset.")
