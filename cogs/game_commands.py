@@ -33,12 +33,11 @@ class GameCommands(commands.Cog, name="Game Commands"):
         conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM tags")
-        tags = cursor.fetchall()  # Update the global variable
+        tags = cursor.fetchall() # Get tags from database 
 
-        cursor.execute("DELETE FROM tags") # Delete all tags from the database
-        for tag in tags: # Add tags back to database
-            self.tag_history.append((tag[0], tag[1]))
-        
+        self.tag_history = [] # Clear the internal tag history 
+        for tag in tags: # Repopulate the internal tag history
+            self.tag_history.append((tag[1], tag[0]))
         conn.close()
 
     async def render_tag_graph(self, ctx):
@@ -53,13 +52,13 @@ class GameCommands(commands.Cog, name="Game Commands"):
         tag_graph.add_edges_from(clean_tag_history)
 
         fig = plt.figure("Tag History", facecolor="#5393f3")
-        fig.set_figwidth(10) # set the width of the diagram to scale with height divided by total nodes 
-        fig.set_figheight(10) # set the height of the diagram to scale with the height of the tag tree
+        fig.set_figwidth(10) #TODO: set the width of the diagram to scale with height divided by total nodes 
+        fig.set_figheight(10) #TODO: set the height of the diagram to scale with the height of the tag tree
         fig.suptitle("Tag History", fontsize="xx-large", fontweight="bold")
         
         plt.xlabel("RHUL Humans vs Zombies", fontsize="xx-large", color="white")# add a label to the bottom of the diagram
 
-        layout=graphviz_layout(tag_graph, prog="dot") # defines positions of nodes to use a hierarchical layout
+        layout = graphviz_layout(tag_graph, prog="dot") # defines positions of nodes to use a hierarchical layout
 
         nx.draw_networkx(tag_graph, pos=layout, arrows=True, with_labels=True, arrowsize=25, node_size=900, font_size=20, font_color="#0000cc", node_color="#FFC442", node_shape="h", arrowstyle="->", width=2, edge_color="#5C5CD3") # renders tag graph
 
@@ -67,6 +66,7 @@ class GameCommands(commands.Cog, name="Game Commands"):
         ax.set_facecolor("#FFC442") # sets the graph background color to orange
 
         plt.savefig("files/tag_graph_image.png", dpi=200) # save the graph to file
+        plt.clf() # resets the internal plot to empty
 
     @commands.command()
     async def how_many_humans(self, ctx):
