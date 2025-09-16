@@ -52,8 +52,8 @@ class GameCommands(commands.Cog, name="Game Commands"):
         tag_graph.add_edges_from(clean_tag_history)
 
         fig = plt.figure("Tag History", facecolor="#5393f3")
-        fig.set_figwidth(10) #TODO: set the width of the diagram to scale with height divided by total nodes 
-        fig.set_figheight(10) #TODO: set the height of the diagram to scale with the height of the tag tree
+        fig.set_figwidth(5+(2.5 * (nx.number_of_nodes(tag_graph) // nx.dag_longest_path_length(tag_graph)))) # set the width of the diagram to scale with height divided by total nodes 
+        fig.set_figheight(5+(nx.dag_longest_path_length(tag_graph) * 1.5)) # set the height of the diagram to scale with the height of the tag tree
         fig.suptitle("Tag History", fontsize="xx-large", fontweight="bold")
         
         plt.xlabel("RHUL Humans vs Zombies", fontsize="xx-large", color="white")# add a label to the bottom of the diagram
