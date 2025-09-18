@@ -27,8 +27,8 @@ cursor.execute("""
 CREATE TABLE IF NOT EXISTS tags (
     zombie_id TEXT NOT NULL,
     human_id TEXT NOT NULL,
-    FOREIGN KEY (zombie_id) REFERENCES zombies(zombie_id),
-    FOREIGN KEY (human_id) REFERENCES humans(human_id),
+    FOREIGN KEY (zombie_id) REFERENCES players(player_id),
+    FOREIGN KEY (human_id) REFERENCES players(player_id),
     PRIMARY KEY (zombie_id, human_id)
 )
 """)

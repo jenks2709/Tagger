@@ -12,7 +12,7 @@ async def update_human_count():
     global human_count
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM humans")
+    cursor.execute("SELECT COUNT(*) FROM players WHERE team='humans'")
     human_count = cursor.fetchone()[0]  # Update the global variable
     conn.close()    
 
