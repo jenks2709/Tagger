@@ -8,17 +8,37 @@ import asyncio
 with open("files/words.txt", "r") as f:
     words = [line.strip() for line in f.readlines()]
 
-class AdminCommands(commands.Cog, name="Admin Commands"):
+class AdminCommands(commands.Cog, name="Admin"):
     """Commands for administrative purposes, Only to be run by Moderators or Committee"""
 
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.command()
+    async def give_points(self, ctx, braincode: str, amount: int ):
+        if ctx.channel.name != "bot-commands":
+            await ctx.send("This command cannot be used here")
+            return
+
+        db="database.db"
+
+        conn = sqlite3.connect(db)
+        cursor = conn.cursor()
+        cursor.execute("SELECT points FROM players WHERE LOWER(braincode) =?", (braincode.lower(),))
+        result = cursor.fetchone()
+        print(result)
+        if result is None:
+            await ctx.send ("Player not found")
+        else:
+            cursor.execute("UPDATE players SET points = points + ? WHERE LOWER(braincode) =?", (amount, braincode.lower()))
+            conn.commit()
+                                
+
     @commands.command(name="check_humans")
     async def check_humans(self, ctx):
         """Check the contents of the humans table in the database."""
-        if ctx.channel.name != "tagger-commands":
-            await ctx.send("This command can only be used in `#tagger-commands`.")
+        if ctx.channel.name != "bot-commands":
+            await ctx.send("This command can only be used in `#bot-commands`.")
             return
 
         db_path = "database.db"
@@ -26,14 +46,14 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
         try:
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
-            cursor.execute("SELECT player_id, braincode,first_name, last_name FROM humans")
+            cursor.execute("SELECT player_id, braincode, first_name, last_name, points FROM players WHERE team = 'Human'")
             rows = cursor.fetchall()
             conn.close()
 
             if rows:
                 response = "**Human Players:**\n"
-                for player_id, braincode, first_name, last_name  in rows:
-                    response += f"- {first_name} {last_name} (ID: {player_id}) (Braincode: {braincode})\n"
+                for player_id, braincode,  first_name, last_name, points  in rows:
+                    response += f"- {first_name} {last_name} (ID: {player_id}) (Braincode: {braincode})(Points: {points})\n"
             else:
                 response = "There are no Humans."
 
@@ -46,8 +66,8 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
     @commands.command(name="check_zombies")
     async def check_zombies(self, ctx):
         """Check the contents of the zombies table in the database."""
-        if ctx.channel.name != "tagger-commands":
-            await ctx.send("This command can only be used in `#tagger-commands`.")
+        if ctx.channel.name != "bot-commands":
+            await ctx.send("This command can only be used in `#bot-commands`.")
             return
 
         db_path = "database.db"
@@ -55,14 +75,14 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
         try:
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
-            cursor.execute("SELECT player_id, braincode, first_name, last_name FROM zombies")
+            cursor.execute("SELECT player_id, braincode, first_name, last_name, points FROM players WHERE team = 'Zombie'")
             rows = cursor.fetchall()
             conn.close()
 
             if rows:
                 response = "**Zombie Players:**\n"
-                for player_id, braincode, first_name, last_name in rows:
-                    response += f"- {first_name} {last_name} (ID: {player_id})(Braincode: {braincode})\n"
+                for player_id, braincode, first_name, last_name, points in rows:
+                    response += f"- {first_name} {last_name} (ID: {player_id})(Braincode: {braincode})(Points: {points})\n"
             else:
                 response = "There are no Zombies."
 
@@ -72,6 +92,33 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
         except Exception as e:
             await ctx.send(f"An unexpected error occurred: `{e}`")
 
+    @commands.command(name="check_players")
+    async def check_players(self, ctx):
+        """Check the contents of the zombies table in the database."""
+        if ctx.channel.name != "bot-commands":
+            await ctx.send("This command can only be used in `#bot-commands`.")
+            return
+        db_path = "database.db"
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT player_id, braincode, first_name, last_name, points FROM players")
+            rows = cursor.fetchall()
+            conn.close()
+
+            if rows:
+                response = "**All Players:**\n"
+                for player_id, braincode, first_name, last_name, points in rows:
+                    response += f"- {first_name} {last_name} (ID: {player_id})(Braincode: {braincode})(Points: {points})\n"
+            else:
+                response = "There are no Players."
+
+            await ctx.send(response)
+        except sqlite3.OperationalError as e:
+            await ctx.send(f"Database error: `{e}`")
+        except Exception as e:
+            await ctx.send(f"An unexpected error occurred: `{e}`")    
+
     @commands.command(name="revive")
     async def revive(self, ctx, braincode: str):
         """Revives a player based on their braincode and returns them to the Humans."""
@@ -80,14 +127,14 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
         except discord.Forbidden:
             await ctx.send("I do not have permission to delete messages.")
 
-        if ctx.channel.name != "tagger-commands":
-            await ctx.send("This command must be used in `#tagger-commands`.")
+        if ctx.channel.name != "bot-commands":
+            await ctx.send("This command must be used in `#bot-commands`.")
             return
 
         conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
 
-        cursor.execute("SELECT player_id, first_name, last_name FROM zombies WHERE LOWER(braincode) = ?", (braincode.lower(),))
+        cursor.execute("SELECT player_id, first_name, last_name FROM players WHERE braincode = ?", (braincode,))
         result = cursor.fetchone()
 
         if not result:
@@ -107,7 +154,7 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
 
         human_role = discord.utils.get(guild.roles, name="Human")
         zombie_role = discord.utils.get(guild.roles, name="Zombie")
-
+        
         if not human_role or not zombie_role:
             await ctx.send("Please make sure 'Human' and 'Zombie' roles exist on the server.")
             conn.close()
@@ -120,9 +167,8 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
 
                 new_braincode = "".join(random.sample(words, 3))
 
-                cursor.execute("DELETE FROM zombies WHERE LOWER(braincode) = ?", (braincode.lower(),))
-                cursor.execute("INSERT OR REPLACE INTO humans (player_id, braincode, first_name, last_name) VALUES (?, ?, ?, ?)",
-                               (member.id, new_braincode, first_name, last_name))
+                cursor.execute("UPDATE players SET braincode = ?, team = ? WHERE braincode = ?",
+                               (new_braincode, "Human", braincode))
                 conn.commit()
 
                 human_chat_channel = discord.utils.get(guild.text_channels, name="human-chat")
@@ -156,15 +202,25 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
     @commands.command(name="reset")
     async def reset(self, ctx):
         """Resets the game, restoring all players to Human and issuing new braincodes."""
-        if ctx.channel.name != "tagger-commands":
-            await ctx.send("This command can only be used in `#tagger-commands`.")
+        
+        if ctx.channel.name != "bot-commands":
+            await ctx.send("This command can only be used in `#bot-commands`.")
             return
+        db = "database.db"
+        conn = sqlite3.connect(db)
+        cursor = conn.cursor()
 
         guild = ctx.guild
         human_role = discord.utils.get(guild.roles, name="Human")
         zombie_role = discord.utils.get(guild.roles, name="Zombie")
+        player_role = discord.utils.get(guild.roles, name="Player")
 
+        if not human_role or not zombie_role or not Player:
+            await ctx.send("Error: Required roles not found in the server.")
+            return
+        
         for member in guild.members:
+            new_braincode = "".join(random.sample(words, 3))
             try:
                 if zombie_role in member.roles:
                     await member.remove_roles(zombie_role)
@@ -174,8 +230,7 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
 
         conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM humans")
-        cursor.execute("DELETE FROM zombies")
+        cursor.execute("UPDATE players SET team=humans WHERE team=zombies")
         cursor.execute("DELETE FROM tags")
         conn.commit()
 
@@ -186,23 +241,35 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
                 try:
                     await member.send(f"Your new braincode is: **`{braincode}`**\n*Keep it secret, keep it safe!*")
                 except discord.Forbidden:
-                    await ctx.send(f"Could not DM {member.display_name}.")
+                    await ctx.send(f"Could not DM {member.display_name}.")                                    
+                    cursor.execute("UPDATE players SET braincode = ?, team = ? WHERE player_id =?",(new_braincode, "Human", member.id))
+                    conn.commit()
+##                    # Send the new braincode via DM
+##                    try:
+##                        await member.send(f"Your new braincode is: **`{new_braincode}`**\n*Keep it secret, keep it safe!*")
+##                    except discord.Forbidden:
+##                        await ctx.send(f"Could not DM {member.display_name}.")
+                
+
         conn.commit()
         conn.close()
 
+
         await ctx.send("Game has been reset.")
+
     
     @commands.command(name="end")
     async def end(self, ctx):
         """ Ends the game. Can only be run by Mods or Committee"""
         # Ensure the command is run in the correct channel
-        if ctx.channel.name != "bot-test":
+        if ctx.channel.name != "bot-commands":
             await ctx.send("You cannot stop the bot from this channel.")
             return
 
         guild = ctx.guild
         human_role = discord.utils.get(guild.roles, name="Human")
         zombie_role = discord.utils.get(guild.roles, name="Zombie")
+        player_role = discord.utils.get(guild.roles, name="Player")
 
         db_path = "database.db"
         if not os.path.exists(db_path):
@@ -213,16 +280,11 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
         cursor = conn.cursor()
 
         # Query both tables for user IDs
-        cursor.execute("SELECT player_id FROM humans")
-        user_ids_table1 = cursor.fetchall()
-
-        cursor.execute("SELECT player_id FROM zombies") 
-        user_ids_table2 = cursor.fetchall()
-
+        cursor.execute("SELECT player_id FROM players")
+        user_ids = cursor.fetchall()
         conn.close()
 
-        # Combine and deduplicate user IDs from both tables
-        user_ids = {int(user_id[0]) for user_id in user_ids_table1 + user_ids_table2}
+        # print("ids: "||user_ids)
 
         if not user_ids:
             await ctx.send("No users found in the database. Nothing to clean. Shutting down Tagger")
@@ -230,15 +292,20 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
             return
 
         # Iterate over the user IDs and remove roles
-        for user_id in user_ids:
-            member = guild.get_member(user_id)
-            if member:
-                try:
-                    await member.remove_roles(human_role, zombie_role)
-                except discord.Forbidden:
-                    await ctx.send(f"Could not remove roles for {member.display_name}.")
-                except Exception as e:
-                    await ctx.send(f"An error occurred while removing roles: `{e}`")
+        for (user_id,) in user_ids:  # Unpacking tuple
+            member = guild.get_member(int(user_id))
+            
+            if member is None:
+                await ctx.send(f"Could not find user with ID {user_id}.")
+                continue
+
+            try:
+                await member.remove_roles(zombie_role, human_role, player_role)
+            except discord.Forbidden:
+                await ctx.send(f"Could not remove roles for {member.display_name}.")
+            except Exception as e:
+                await ctx.send(f"Error removing roles from {member.display_name}: {e}")
+
 
         # Delete the database file
         try:
@@ -251,6 +318,17 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
         await ctx.send("Tagger has been shut down, roles removed, and database wiped.")
         await self.bot.close()
 
+    @commands.command()
+    async def shop(self, ctx):
+        with open("files/shop.txt", "r", encoding="utf-8") as file_1:
+            rules = file_1.read()
+
+        await ctx.send("Equipment Store:")  # Bold title
+        formatted_rules = f"```\n{rules}\n```"
+
+        # Chunking for long messages
+        for chunk in [formatted_rules[i : i + 1990] for i in range(0, len(formatted_rules), 1990)]:
+            await ctx.send(chunk)
 
     @commands.command(name="starting_tag")
     async def tag(self, ctx, braincode: str):
@@ -339,6 +417,7 @@ class AdminCommands(commands.Cog, name="Admin Commands"):
                 await ctx.send(f"{member.mention} is already a Zombie.")
         except Exception as e:
             await ctx.send(f"An error occurred while tagging: `{e}`")
+
 
 async def setup(bot):
     await bot.add_cog(AdminCommands(bot))

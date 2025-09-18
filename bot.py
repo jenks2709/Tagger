@@ -4,6 +4,7 @@ import random
 import sqlite3
 import os
 import asyncio
+import time
 
 # Load the list of words from words.txt
 with open("files/words.txt", "r") as f:
@@ -13,27 +14,21 @@ with open("files/words.txt", "r") as f:
 conn = sqlite3.connect("database.db")
 cursor = conn.cursor()
 cursor.execute("""
-CREATE TABLE IF NOT EXISTS humans (
+CREATE TABLE IF NOT EXISTS players (
     player_id TEXT PRIMARY KEY,
+    team TEXT,
     braincode TEXT NOT NULL,
     first_name TEXT,
-    last_name TEXT
-)
-""")
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS zombies (
-    player_id TEXT PRIMARY KEY,
-    braincode TEXT NOT NULL,
-    first_name TEXT,
-    last_name TEXT
+    last_name TEXT,
+    points TEXT
 )
 """)
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS tags (
     zombie_id TEXT NOT NULL,
     human_id TEXT NOT NULL,
-    FOREIGN KEY (zombie_id) REFERENCES zombies(zombie_id),
-    FOREIGN KEY (human_id) REFERENCES humans(human_id),
+    FOREIGN KEY (zombie_id) REFERENCES players(player_id),
+    FOREIGN KEY (human_id) REFERENCES players(player_id),
     PRIMARY KEY (zombie_id, human_id)
 )
 """)
@@ -47,13 +42,12 @@ intents.guilds = True
 intents.members = True
 intents.message_content = True
 
-bot = commands.Bot(command_prefix=".", intents=intents)
-
-#Human, Zombie and Spectator count variable set up
+#Variable set up
 
 human_count = 0
 zombie_count = 0
 spectator_count = 0
+stun_timer = 5
 
 #Function set up
 async def update_human_count():
@@ -64,7 +58,8 @@ async def update_human_count():
     cursor.execute("SELECT COUNT(*) FROM humans")
     human_count = cursor.fetchone()[0]  # Update the global variable
     conn.close()
-    
+
+   
 async def update_zombie_count():
     """Updates the global human_count variable from the database."""
     global zombie_count
@@ -84,7 +79,7 @@ async def update_tag_history():
     conn.close()
 
 #Cog set up
-COGS = ["cogs.human_commands", "cogs.dayplay_commands", "cogs.zombie_commands", "cogs.admin_commands", "cogs.game_commands"]
+COGS = ["cogs.human_commands", "cogs.dayplay_commands", "cogs.zombie_commands", "cogs.admin_commands", "cogs.game_commands", "cogs.automation", "cogs.shop"]
 async def load_cogs():
     """Loads all cogs from the list"""
     for cog in COGS:
@@ -94,12 +89,69 @@ async def load_cogs():
         except Exception as e:
             print(f"❌ Failed to load {cog}: {e}")
 
+async def announce_ready(channel_id=None, role_id=None):
+    guild = bot.guilds[0]
+    if channel_id == None or role_id == None:
+        print("Missing channel_id or role_id, skipping announcement")
+    else:
+
+        channel = guild.get_channel(channel_id)
+        role = guild.get_role(int(role_id))
+        
+        if channel and role:
+            await channel.send(f"Aye-yi-yi-yi-yi! Tagger ready for action!{role.mention}")
+        else:
+            print(f"could not find channel and/or role")
+
+
+# List of cogs to ignore
+IGNORED_COGS = {"Dayplay", "Admin", "Shop"}
+
+class CustomHelpCommand(commands.HelpCommand):
+    async def send_bot_help(self, mapping):
+        embed = discord.Embed(title="Help", color=discord.Color.blue())
+
+        for cog, commands in mapping.items():
+            if cog and cog.qualified_name in IGNORED_COGS:
+                continue  # Skip ignored cogs
+
+            filtered_commands = [cmd for cmd in commands if not cmd.hidden]
+            if filtered_commands:
+                command_list = "\n".join(f"`{cmd.name}` - {cmd.help or 'No description'}" for cmd in filtered_commands)
+                embed.add_field(name=cog.qualified_name if cog else "No Category", value=command_list, inline=False)
+
+        await self.get_destination().send(embed=embed)
+
+    async def send_cog_help(self, cog):
+        if cog.qualified_name in IGNORED_COGS:
+            return  # Ignore hidden cogs
+
+        embed = discord.Embed(title=f"Help - {cog.qualified_name}", color=discord.Color.green())
+        commands = cog.get_commands()
+        filtered_commands = [cmd for cmd in commands if not cmd.hidden]
+
+        if not filtered_commands:
+            return
+
+        for command in filtered_commands:
+            embed.add_field(name=command.name, value=command.help or "No description", inline=False)
+
+        await self.get_destination().send(embed=embed)
+
+    async def send_command_help(self, command):
+        if command.cog and command.cog.qualified_name in IGNORED_COGS:
+            return  # Ignore commands from ignored cogs
+
+        embed = discord.Embed(title=f"Help: {command.name}", description=command.help or "No description", color=discord.Color.green())
+        embed.add_field(name="Usage", value=self.get_command_signature(command))
+        await self.get_destination().send(embed=embed)
+bot = commands.Bot(command_prefix=".", intents=intents, help_command=CustomHelpCommand())
+
 @bot.event
 async def on_ready():
     await load_cogs()
-    print("Tagger is online, running and ready for commands")
-
-
+    print(f"Cogs loaded")
+    await announce_ready() # Enter the desired channel/role here 
     
 # Run the bot
 with open("files/token.txt", "r", encoding="utf-8") as file:
