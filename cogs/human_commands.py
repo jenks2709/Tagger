@@ -12,7 +12,7 @@ async def update_human_count():
     global human_count
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM humans")
+    cursor.execute("SELECT COUNT(*) FROM players WHERE team='humans'")
     human_count = cursor.fetchone()[0]  # Update the global variable
     conn.close()    
 
@@ -40,6 +40,15 @@ class HumanCommands(commands.Cog, name="Human Commands"):
                 await ctx.send("'Human' role does not exist. Please create it and try again.")
                 return
 
+            if not zombie_role:
+                await ctx.send("'Zombie' role does not exist. Please create it and try again.")
+                return
+
+            if not player_role:
+                await ctx.send("'Player' role does not exist. Please create it and try again.")
+                return
+
+
             if player_role in member.roles:
                 await ctx.send("You have already joined the game.")
                 return
@@ -53,7 +62,7 @@ class HumanCommands(commands.Cog, name="Human Commands"):
             conn = sqlite3.connect("database.db")
             cursor = conn.cursor()   
             cursor.execute("""
-                INSERT OR REPLACE INTO humans (player_id, braincode, first_name, last_name) 
+                INSERT OR REPLACE INTO players (player_id, braincode, first_name, last_name) 
                 VALUES (?, ?, ?, ?)
             """, (str(member.id), braincode, first_name, last_name))
             conn.commit()

@@ -23,6 +23,15 @@ CREATE TABLE IF NOT EXISTS players (
     points TEXT
 )
 """)
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS tags (
+    zombie_id TEXT NOT NULL,
+    human_id TEXT NOT NULL,
+    FOREIGN KEY (zombie_id) REFERENCES players(player_id),
+    FOREIGN KEY (human_id) REFERENCES players(player_id),
+    PRIMARY KEY (zombie_id, human_id)
+)
+""")
 conn.commit()
 conn.close()
 
@@ -60,6 +69,15 @@ async def update_zombie_count():
     zombie_count = cursor.fetchone()[0]  # Update the global variable
     conn.close()
 
+async def update_tag_history():
+    """Updates the global tag history from database"""
+    global tag_history
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM tags")
+    tag_history = cursor.fetchall  # Update the global variable
+    conn.close()
+
 #Cog set up
 COGS = ["cogs.human_commands", "cogs.dayplay_commands", "cogs.zombie_commands", "cogs.admin_commands", "cogs.game_commands", "cogs.automation", "cogs.shop"]
 async def load_cogs():
@@ -71,17 +89,19 @@ async def load_cogs():
         except Exception as e:
             print(f"❌ Failed to load {cog}: {e}")
 
-async def announce_ready():
-    channel_id = 
+async def announce_ready(channel_id=None, role_id=None):
     guild = bot.guilds[0]
-    channel = guild.get_channel(channel_id)
-    role_id = 
-    role = guild.get_role(int(role_id))
-        
-    if channel:
-        await channel.send(f"Aye-yi-yi-yi-yi! Alpha-10 ready for action!{role.mention}")
+    if channel_id == None or role_id == None:
+        print("Missing channel_id or role_id, skipping announcement")
     else:
-        print(f"could not find channel")
+
+        channel = guild.get_channel(channel_id)
+        role = guild.get_role(int(role_id))
+        
+        if channel and role:
+            await channel.send(f"Aye-yi-yi-yi-yi! Tagger ready for action!{role.mention}")
+        else:
+            print(f"could not find channel and/or role")
 
 
 # List of cogs to ignore
@@ -131,8 +151,7 @@ bot = commands.Bot(command_prefix=".", intents=intents, help_command=CustomHelpC
 async def on_ready():
     await load_cogs()
     print(f"Cogs loaded")
-    await announce_ready()
-
+    await announce_ready() # Enter the desired channel/role here 
     
 # Run the bot
 with open("files/token.txt", "r", encoding="utf-8") as file:

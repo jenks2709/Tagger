@@ -35,9 +35,8 @@ Assets such as images or braincode wordlists are stored in the `./files` directo
 * [matplotlib](https://matplotlib.org/)
 * [networkx](https://networkx.org/documentation/stable/index.html)
 * pydot
+* json
 * SQLite3
-
-
 
 
 ## 

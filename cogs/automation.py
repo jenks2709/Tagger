@@ -6,7 +6,9 @@ from datetime import datetime
 import sqlite3
 
 class Automation(commands.Cog):
+    
     def __init__(self, bot):
+        pass
 
     @commands.command()
     async def announcements(self, ctx):
