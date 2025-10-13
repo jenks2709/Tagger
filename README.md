@@ -3,7 +3,7 @@
 </div>
 
 # Tagger
-Repository containing the code for the Tagger bot used by [RHUL HvZ Society](https://www.su.rhul.ac.uk/societies/a-z/hvz/)
+Repository containing the code for the Tagger bot used by [Humans Vs Zombies Society at Royal Holloway, University of London](https://www.su.rhul.ac.uk/societies/a-z/hvz/)
 
 ## What is HvZ?
 Humans vs Zombies is a 24/7 survival tag game that is played across days or weeks. 
