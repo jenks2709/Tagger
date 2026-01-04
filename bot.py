@@ -38,7 +38,6 @@ intents.message_content = True
 human_count = 0
 zombie_count = 0
 spectator_count = 0
-stun_timer = 5
 
 #Function set up
 async def update_human_count():
@@ -67,19 +66,19 @@ async def load_cogs():
     for cog in COGS:
         try:
             await bot.load_extension(cog)
-            print(f"✅ Successfully loaded {cog}")
+            print(f" Successfully loaded {cog}")
         except Exception as e:
-            print(f"❌ Failed to load {cog}: {e}")
+            print(f" Failed to load {cog}: {e}")
 
 async def announce_ready():
-    channel_id = 
+    channel_id = 1405989658487427196
     guild = bot.guilds[0]
     channel = guild.get_channel(channel_id)
-    role_id = 
+    role_id = 501688609104199680
     role = guild.get_role(int(role_id))
         
     if channel:
-        await channel.send(f"Aye-yi-yi-yi-yi! Alpha-10 ready for action!{role.mention}")
+        await channel.send(f"Tagger is ready to be used {role.mention}")
     else:
         print(f"could not find channel")
 
