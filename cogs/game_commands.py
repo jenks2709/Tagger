@@ -16,9 +16,9 @@ class GameCommands(commands.Cog, name="Game Commands"):
         """Updates the human and zombie counts"""
         conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM humans")
+        cursor.execute("SELECT COUNT(*) FROM players WHERE team = ?", ("human",))
         self.human_count = cursor.fetchone()[0]  # Store inside class
-        cursor.execute("SELECT COUNT(*) FROM zombies")
+        cursor.execute("SELECT COUNT(*) FROM players WHERE team = ?", ("zombie",))
         self.zombie_count = cursor.fetchone()[0]
         conn.close()
 

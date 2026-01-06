@@ -12,7 +12,7 @@ async def update_human_count():
     global human_count
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM humans")
+    cursor.execute("SELECT COUNT(*) FROM players WHERE team = ?", ("human",))
     human_count = cursor.fetchone()[0]  # Update the global variable
     conn.close()    
 
@@ -53,9 +53,9 @@ class HumanCommands(commands.Cog, name="Human Commands"):
             conn = sqlite3.connect("database.db")
             cursor = conn.cursor()   
             cursor.execute("""
-                INSERT OR REPLACE INTO humans (player_id, braincode, first_name, last_name) 
-                VALUES (?, ?, ?, ?)
-            """, (str(member.id), braincode, first_name, last_name))
+                INSERT OR REPLACE INTO players (player_id, team, braincode, first_name, last_name) 
+                VALUES (?, ?, ?, ?, ?)
+            """, (str(member.id), "human", braincode, first_name, last_name))
             conn.commit()
             conn.close()
             if first_name and last_name:
@@ -88,7 +88,7 @@ class HumanCommands(commands.Cog, name="Human Commands"):
         player_id = str(ctx.author.id)  # Convert user ID to string since it's stored as TEXT
 
         # Query the database to retrieve the braincode for the player_id
-        cursor.execute("SELECT braincode FROM humans WHERE player_id = ?", (player_id,))
+        cursor.execute("SELECT braincode FROM players WHERE player_id = ?", (player_id,))
         result = cursor.fetchone()
         conn.close()
 

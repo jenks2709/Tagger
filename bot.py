@@ -45,7 +45,7 @@ async def update_human_count():
     global human_count
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM humans")
+    cursor.execute("SELECT COUNT(*) FROM players WHERE team = ?", ("human",))
     human_count = cursor.fetchone()[0]  # Update the global variable
     conn.close()
 
@@ -55,7 +55,7 @@ async def update_zombie_count():
     global zombie_count
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM zombies")
+    cursor.execute("SELECT COUNT(*) FROM players WHERE team = ?", ("zombie",))
     zombie_count = cursor.fetchone()[0]  # Update the global variable
     conn.close()
 
