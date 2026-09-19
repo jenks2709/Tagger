@@ -154,7 +154,7 @@ class GameCommands(commands.Cog, name="Game Commands"):
         else:
             for tag in self.tag_history:
                 await ctx.send(f"**`{guild.get_member(int(tag[0]))}`** tagged **`{guild.get_member(int(tag[1]))}`**")
-                await ctx.send(f"Debug: **`{int(tag[0])}`** tagged **`{int(tag[1])}`**")
+
     @commands.command()
     async def tag_tree(self, ctx):
         """Sends an image containing a diagram of the tag history"""
