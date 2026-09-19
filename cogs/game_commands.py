@@ -52,22 +52,41 @@ class GameCommands(commands.Cog, name="Game Commands"):
         tag_graph = nx.DiGraph()
         tag_graph.add_edges_from(clean_tag_history)
 
-        fig = plt.figure("Tag History", facecolor="#5393f3")
-        fig.set_figwidth(5+(2.5 * (nx.number_of_nodes(tag_graph) // nx.dag_longest_path_length(tag_graph)))) # set the width of the diagram to scale with height divided by total nodes 
-        fig.set_figheight(5+(nx.dag_longest_path_length(tag_graph) * 1.5)) # set the height of the diagram to scale with the height of the tag tree
-        fig.suptitle("Tag History", fontsize="xx-large", fontweight="bold")
-        
-        plt.xlabel("RHUL Nerfsoc - (Note: this feature is a WIP)", fontsize="xx-large", color="white")# add a label to the bottom of the diagram
+        if nx.is_directed_acyclic_graph(tag_graph): # if there are no cycles in the graph
 
-        layout = graphviz_layout(tag_graph, prog="dot") # defines positions of nodes to use a hierarchical layout
+            fig = plt.figure("Tag History",fig.set_figwidth(5+(2.5 * (nx.number_of_nodes(tag_graph) // nx.dag_longest_path_length(tag_graph))))) # set the width of the diagram to scale with height divided by total nodes 
+            fig.set_figheight(5+(nx.dag_longest_path_length(tag_graph) * 1.5)) # set the height of the diagram to scale with the height of the tag tree
+            fig.suptitle("Tag History", fontsize="xx-large", fontweight="bold")
+            
+            plt.xlabel("RHUL Nerfsoc - (Note: this feature is a WIP)", fontsize="xx-large", color="white")# add a label to the bottom of the diagram
 
-        nx.draw_networkx(tag_graph, pos=layout, arrows=True, with_labels=True, arrowsize=25, node_size=900, font_size=20, font_color="#0000cc", node_color="#FFC442", node_shape="h", arrowstyle="->", width=2, edge_color="#5C5CD3") # renders tag graph
+            layout = graphviz_layout(tag_graph, prog="dot") # defines positions of nodes to use a hierarchical layout
 
-        ax = plt.gca()
-        ax.set_facecolor("#FFC442") # sets the graph background color to orange
+            nx.draw_networkx(tag_graph, pos=layout, arrows=True, with_labels=True, arrowsize=25, node_size=900, font_size=20, font_color="#0000cc", node_color="#FFC442", node_shape="h", arrowstyle="->", width=2, edge_color="#5C5CD3") # renders tag graph
 
-        plt.savefig("files/tag_graph_image.png", dpi=200) # save the graph to file
-        plt.clf() # resets the internal plot to empty
+            ax = plt.gca()
+            ax.set_facecolor("#FFC442") # sets the graph background color to orange
+
+            plt.savefig("files/tag_graph_image.png", dpi=200) # save the graph to file
+            plt.clf() # resets the internal plot to empty facecolor="#5393f3")
+            fig.set_figwidth(5+(2.5 * (nx.number_of_nodes(tag_graph) // nx.dag_longest_path_length(tag_graph)))) # set the width of the diagram to scale with height divided by total nodes 
+            fig.set_figheight(5+(nx.dag_longest_path_length(tag_graph) * 1.5)) # set the height of the diagram to scale with the height of the tag tree
+            fig.suptitle("Tag History", fontsize="xx-large", fontweight="bold")
+            
+            plt.xlabel("RHUL Nerfsoc - (Note: this feature is a WIP)", fontsize="xx-large", color="white")# add a label to the bottom of the diagram
+
+            layout = graphviz_layout(tag_graph, prog="dot") # defines positions of nodes to use a hierarchical layout
+
+            nx.draw_networkx(tag_graph, pos=layout, arrows=True, with_labels=True, arrowsize=25, node_size=900, font_size=20, font_color="#0000cc", node_color="#FFC442", node_shape="h", arrowstyle="->", width=2, edge_color="#5C5CD3") # renders tag graph
+
+            ax = plt.gca()
+            ax.set_facecolor("#FFC442") # sets the graph background color to orange
+
+            plt.savefig("files/tag_graph_image.png", dpi=200) # save the graph to file
+            plt.clf() # resets the internal plot to empty
+        else:
+            await ctx.send("`An error occured while rendering graph: Graph contains a cycle - this is likely due to an incorrect tag history.` \n*The previously generated image will be used instead*")
+            
 
     @commands.command()
     async def how_many_humans(self, ctx):
@@ -135,6 +154,7 @@ class GameCommands(commands.Cog, name="Game Commands"):
         else:
             for tag in self.tag_history:
                 await ctx.send(f"**`{guild.get_member(int(tag[0]))}`** tagged **`{guild.get_member(int(tag[1]))}`**")
+                await ctx.send(f"Debug: **`{int(tag[0])}`** tagged **`{int(tag[1])}`**")
     @commands.command()
     async def tag_tree(self, ctx):
         """Sends an image containing a diagram of the tag history"""
