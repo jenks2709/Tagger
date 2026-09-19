@@ -92,6 +92,7 @@ class AdminCommands(commands.Cog, name="Admin"):
         except Exception as e:
             await ctx.send(f"An unexpected error occurred: `{e}`")
 
+
     @commands.command(name="check_players")
     async def check_players(self, ctx):
         """Check the contents of the players table in the database."""
@@ -118,6 +119,35 @@ class AdminCommands(commands.Cog, name="Admin"):
             await ctx.send(f"Database error: `{e}`")
         except Exception as e:
             await ctx.send(f"An unexpected error occurred: `{e}`")    
+
+
+    @commands.command(name="check_tags")
+    async def check_tags(self, ctx):
+        """Check the contents of the tags table in the database."""
+        if ctx.channel.name != "bot-commands":
+            await ctx.send("This command can only be used in `#bot-commands`.")
+            return
+        db_path = "database.db"
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT zombie_id, human_id FROM tags")
+            rows = cursor.fetchall()
+            conn.close()
+
+            if rows:
+                response = "**All Tags:**\n"
+                for zombie_id, human_id in rows:
+                    response += f"- {ctx.guild.get_member(int(zombie_id))} (`{zombie_id}`) tagged {ctx.guild.get_member(int(human_id))} (`{human_id}`)\n"
+            else:
+                response = "There are no Tags."
+
+            await ctx.send(response)
+        except sqlite3.OperationalError as e:
+            await ctx.send(f"Database error: `{e}`")
+        except Exception as e:
+            await ctx.send(f"An unexpected error occurred: `{e}`")    
+
 
     @commands.command(name="revive")
     async def revive(self, ctx, braincode: str):
