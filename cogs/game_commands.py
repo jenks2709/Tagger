@@ -57,7 +57,7 @@ class GameCommands(commands.Cog, name="Game Commands"):
         fig.set_figheight(5+(nx.dag_longest_path_length(tag_graph) * 1.5)) # set the height of the diagram to scale with the height of the tag tree
         fig.suptitle("Tag History", fontsize="xx-large", fontweight="bold")
         
-        plt.xlabel("RHUL Humans vs Zombies", fontsize="xx-large", color="white")# add a label to the bottom of the diagram
+        plt.xlabel("RHUL Nerfsoc - (Note: this feature is a WIP)", fontsize="xx-large", color="white")# add a label to the bottom of the diagram
 
         layout = graphviz_layout(tag_graph, prog="dot") # defines positions of nodes to use a hierarchical layout
 
