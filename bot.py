@@ -47,7 +47,6 @@ intents.message_content = True
 human_count = 0
 zombie_count = 0
 spectator_count = 0
-stun_timer = 5
 
 #Function set up
 async def update_human_count():
@@ -55,7 +54,7 @@ async def update_human_count():
     global human_count
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM humans")
+    cursor.execute("SELECT COUNT(*) FROM players WHERE team = ?", ("human",))
     human_count = cursor.fetchone()[0]  # Update the global variable
     conn.close()
 
@@ -65,7 +64,7 @@ async def update_zombie_count():
     global zombie_count
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM zombies")
+    cursor.execute("SELECT COUNT(*) FROM players WHERE team = ?", ("zombie",))
     zombie_count = cursor.fetchone()[0]  # Update the global variable
     conn.close()
 
@@ -85,14 +84,20 @@ async def load_cogs():
     for cog in COGS:
         try:
             await bot.load_extension(cog)
-            print(f"✅ Successfully loaded {cog}")
+            print(f" Successfully loaded {cog}")
         except Exception as e:
-            print(f"❌ Failed to load {cog}: {e}")
+            print(f" Failed to load {cog}: {e}")
 
-async def announce_ready(channel_id=None, role_id=None):
+
+async def announce_ready():
+    channel_id = 1405989658487427196
     guild = bot.guilds[0]
-    if channel_id == None or role_id == None:
-        print("Missing channel_id or role_id, skipping announcement")
+    channel = guild.get_channel(channel_id)
+    role_id = 501688609104199680
+    role = guild.get_role(int(role_id))
+        
+    if channel:
+        await channel.send(f"Tagger is ready to be used {role.mention}")
     else:
 
         channel = guild.get_channel(channel_id)

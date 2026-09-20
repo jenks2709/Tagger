@@ -33,8 +33,13 @@ class ZombieCommands(commands.Cog, name="Zombie Commands"):
             cursor = conn.cursor()
 
             # Query the human database for the player_id associated with the braincode
-            cursor.execute("SELECT player_id, braincode, first_name, last_name FROM humans WHERE LOWER(braincode) = ?", (braincode.lower(),))
+            cursor.execute("SELECT player_id, team, braincode, first_name, last_name FROM players WHERE LOWER(braincode) = ?", (braincode.lower(),))
             result = cursor.fetchone()
+            cursor.execute("UPDATE players SET team = ? WHERE LOWER(braincode) = ?",("zombie", braincode.lower()))
+            conn.commit()
+
+
+
         except sqlite3.Error as e:
             await ctx.send(f"Database error: `{e}`")
             return
@@ -43,12 +48,22 @@ class ZombieCommands(commands.Cog, name="Zombie Commands"):
             await ctx.send(f"No player found with that braincode.")
             return
 
-        # Extract player info
-        player_id, _, first_name, last_name = result
-
-        # Retrieve the member object
+        cursor.execute("SELECT player_id FROM players WHERE LOWER(braincode) = ?", (braincode.lower(),))
+        result = cursor.fetchone()
+        player_id= result[0]
         guild = ctx.guild
+        # Retrieve the member object
+
         member = guild.get_member(int(player_id))
+
+        if member is None:
+            try:
+                member = await guild.fetch_member(int(player_id))
+            except discord.NotFound:
+                await ctx.send(f"Could not find a player with ID {player_id} in this server.")
+                return
+
+        
         tagger = ctx.author
         human_chat_channel = discord.utils.get(guild.text_channels, name="human-chat")
         zombie_chat_channel = discord.utils.get(guild.text_channels, name="zombie-chat")
@@ -65,10 +80,7 @@ class ZombieCommands(commands.Cog, name="Zombie Commands"):
             await ctx.send("No 'Human' or 'Zombie' roles found. Please create these roles first.")
             return
 
-        # Convert Human to Zombie in the database
-        cursor.execute("INSERT OR REPLACE INTO zombies (player_id, braincode, first_name, last_name) VALUES (?, ?, ?, ?)", (member.id, braincode, first_name, last_name))
-        cursor.execute("DELETE FROM humans WHERE LOWER(braincode) = ?", (braincode.lower(),))
-        
+
         #Add tag to history
         cursor.execute("INSERT INTO tags (zombie_id, human_id) VALUES (?, ?)", (member.id, tagger.id))
         conn.commit()
@@ -99,7 +111,7 @@ class ZombieCommands(commands.Cog, name="Zombie Commands"):
                 if zombie_chat_channel:
                     await ctx.send(f"{member.mention} was tagged by {tagger.mention}! {tag_message}")
 
-                # ✅ FIX: Update the human and zombie counts using GameCommands Cog
+                # FIX: Update the human and zombie counts using GameCommands Cog
                 game_cog = self.bot.get_cog("Game Commands")  # Get the cog
                 if game_cog:
                     await game_cog.update_counts()  # Update counts if the cog exists

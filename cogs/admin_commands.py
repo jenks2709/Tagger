@@ -46,7 +46,7 @@ class AdminCommands(commands.Cog, name="Admin"):
         try:
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
-            cursor.execute("SELECT player_id, braincode, first_name, last_name, points FROM players WHERE team = 'Human'")
+            cursor.execute("SELECT player_id, braincode, first_name, last_name, points FROM players WHERE team = 'human'")
             rows = cursor.fetchall()
             conn.close()
 
@@ -75,7 +75,7 @@ class AdminCommands(commands.Cog, name="Admin"):
         try:
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
-            cursor.execute("SELECT player_id, braincode, first_name, last_name, points FROM players WHERE team = 'Zombie'")
+            cursor.execute("SELECT player_id, braincode, first_name, last_name, points FROM players WHERE team = 'zombie'")
             rows = cursor.fetchall()
             conn.close()
 
@@ -92,9 +92,10 @@ class AdminCommands(commands.Cog, name="Admin"):
         except Exception as e:
             await ctx.send(f"An unexpected error occurred: `{e}`")
 
+
     @commands.command(name="check_players")
     async def check_players(self, ctx):
-        """Check the contents of the zombies table in the database."""
+        """Check the contents of the players table in the database."""
         if ctx.channel.name != "bot-commands":
             await ctx.send("This command can only be used in `#bot-commands`.")
             return
@@ -118,6 +119,35 @@ class AdminCommands(commands.Cog, name="Admin"):
             await ctx.send(f"Database error: `{e}`")
         except Exception as e:
             await ctx.send(f"An unexpected error occurred: `{e}`")    
+
+
+    @commands.command(name="check_tags")
+    async def check_tags(self, ctx):
+        """Check the contents of the tags table in the database."""
+        if ctx.channel.name != "bot-commands":
+            await ctx.send("This command can only be used in `#bot-commands`.")
+            return
+        db_path = "database.db"
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT zombie_id, human_id FROM tags")
+            rows = cursor.fetchall()
+            conn.close()
+
+            if rows:
+                response = "**All Tags:**\n"
+                for zombie_id, human_id in rows:
+                    response += f"- {ctx.guild.get_member(int(zombie_id))} (`{zombie_id}`) tagged {ctx.guild.get_member(int(human_id))} (`{human_id}`)\n"
+            else:
+                response = "There are no Tags."
+
+            await ctx.send(response)
+        except sqlite3.OperationalError as e:
+            await ctx.send(f"Database error: `{e}`")
+        except Exception as e:
+            await ctx.send(f"An unexpected error occurred: `{e}`")    
+
 
     @commands.command(name="revive")
     async def revive(self, ctx, braincode: str):
@@ -168,7 +198,7 @@ class AdminCommands(commands.Cog, name="Admin"):
                 new_braincode = "".join(random.sample(words, 3))
 
                 cursor.execute("UPDATE players SET braincode = ?, team = ? WHERE braincode = ?",
-                               (new_braincode, "Human", braincode))
+                               (new_braincode, "human", braincode))
                 conn.commit()
 
                 human_chat_channel = discord.utils.get(guild.text_channels, name="human-chat")
@@ -210,12 +240,15 @@ class AdminCommands(commands.Cog, name="Admin"):
         conn = sqlite3.connect(db)
         cursor = conn.cursor()
 
+        cursor.execute("DELETE FROM tags") # wipe all tag data from in the database
+        conn.commit()
+
         guild = ctx.guild
         human_role = discord.utils.get(guild.roles, name="Human")
         zombie_role = discord.utils.get(guild.roles, name="Zombie")
         player_role = discord.utils.get(guild.roles, name="Player")
 
-        if not human_role or not zombie_role or not Player:
+        if not human_role or not zombie_role:
             await ctx.send("Error: Required roles not found in the server.")
             return
         
@@ -225,39 +258,50 @@ class AdminCommands(commands.Cog, name="Admin"):
                 if zombie_role in member.roles:
                     await member.remove_roles(zombie_role)
                     await member.add_roles(human_role)
-            except discord.Forbidden:
-                await ctx.send(f"Could not reset roles for {member.display_name}.")
-
-        conn = sqlite3.connect("database.db")
-        cursor = conn.cursor()
-        cursor.execute("UPDATE players SET team=humans WHERE team=zombies")
-        cursor.execute("DELETE FROM tags")
-        conn.commit()
-
-        for member in guild.members:
-            if human_role in member.roles:
-                braincode = "".join(random.sample(words, 3))
-                cursor.execute("INSERT INTO humans (player_id, braincode) VALUES (?, ?)", (str(member.id), braincode))
-                try:
-                    await member.send(f"Your new braincode is: **`{braincode}`**\n*Keep it secret, keep it safe!*")
-                except discord.Forbidden:
-                    await ctx.send(f"Could not DM {member.display_name}.")                                    
-                    cursor.execute("UPDATE players SET braincode = ?, team = ? WHERE player_id =?",(new_braincode, "Human", member.id))
+                                    
+                    cursor.execute("UPDATE players SET braincode = ?, team = ? WHERE player_id =?",(new_braincode, "human", member.id))
                     conn.commit()
-##                    # Send the new braincode via DM
-##                    try:
-##                        await member.send(f"Your new braincode is: **`{new_braincode}`**\n*Keep it secret, keep it safe!*")
-##                    except discord.Forbidden:
-##                        await ctx.send(f"Could not DM {member.display_name}.")
+                    # Send the new braincode via DM
+                    try:
+                        await member.send(f"Your new braincode is: **`{new_braincode}`**\n*Keep it secret, keep it safe!*")
+                    except discord.Forbidden:
+                        await ctx.send(f"Could not DM {member.display_name}.")
+                else:
+                    pass
                 
-
-        conn.commit()
-        conn.close()
-
+            except Exception as e:
+                await ctx.send(f"Error processing {member.display_name}: {e}")
 
         await ctx.send("Game has been reset.")
+        conn.close()
 
-    
+#             except discord.Forbidden:
+#                 await ctx.send(f"Could not reset roles for {member.display_name}.")
+
+#         conn = sqlite3.connect("database.db")
+#         cursor = conn.cursor()
+#         cursor.execute("UPDATE players SET team=humans WHERE team=zombies")
+#         cursor.execute("DELETE FROM tags")
+#         conn.commit()
+
+#         for member in guild.members:
+#             if human_role in member.roles:
+#                 braincode = "".join(random.sample(words, 3))
+#                 cursor.execute("INSERT INTO humans (player_id, braincode) VALUES (?, ?)", (str(member.id), braincode))
+#                 try:
+#                     await member.send(f"Your new braincode is: **`{braincode}`**\n*Keep it secret, keep it safe!*")
+#                 except discord.Forbidden:
+#                     await ctx.send(f"Could not DM {member.display_name}.")                                    
+#                     cursor.execute("UPDATE players SET braincode = ?, team = ? WHERE player_id =?",(new_braincode, "Human", member.id))
+#                     conn.commit()
+# ##                    # Send the new braincode via DM
+# ##                    try:
+# ##                        await member.send(f"Your new braincode is: **`{new_braincode}`**\n*Keep it secret, keep it safe!*")
+# ##                    except discord.Forbidden:
+# ##                        await ctx.send(f"Could not DM {member.display_name}.")
+
+
+        conn.close()
     @commands.command(name="end")
     async def end(self, ctx):
         """ Ends the game. Can only be run by Mods or Committee"""

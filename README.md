@@ -3,14 +3,14 @@
 </div>
 
 # Tagger
-Repository containing the code for the Tagger bot used by [RHUL HvZ Society](https://www.su.rhul.ac.uk/societies/a-z/hvz/)
+Repository containing the code for the Tagger bot used by [Humans Vs Zombies Society at Royal Holloway, University of London](https://www.su.rhul.ac.uk/societies/a-z/hvz/)
 
 ## What is HvZ?
 Humans vs Zombies is a 24/7 survival tag game that is played across days or weeks. 
 
 Zombies hunt humans and can convert them by tagging them with a "full palm touch", Humans are able to temporarily stun them by throwing socks or firing nerf darts at them. 
 
-Most of our games are closed to non-students but we do host annual "Invitational" games that are open to the public, if you are interested in learning more, please join [our discord server](http://tinyurl.com/discordhvz)
+Our games are closed to non-students but we do host annual "Invitational" games that are open to the public, if you are interested in learning more, please join [our discord server](http://tinyurl.com/discordhvz)
 
 ## Running the bot
 Create a file called `token.txt` containing [your bots token](https://www.madpenguin.org/how-to-get-your-discord-bot-token/)
