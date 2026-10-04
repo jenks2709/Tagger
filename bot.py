@@ -60,7 +60,7 @@ async def update_zombie_count():
     conn.close()
 
 #Cog set up
-COGS = ["cogs.human_commands", "cogs.dayplay_commands", "cogs.zombie_commands", "cogs.admin_commands", "cogs.game_commands", "cogs.automation", "cogs.shop"]
+COGS = ["cogs.human_commands", "cogs.dayplay_commands", "cogs.zombie_commands", "cogs.admin_commands", "cogs.game_commands"]
 async def load_cogs():
     """Loads all cogs from the list"""
     for cog in COGS:
@@ -69,19 +69,6 @@ async def load_cogs():
             print(f" Successfully loaded {cog}")
         except Exception as e:
             print(f" Failed to load {cog}: {e}")
-
-async def announce_ready():
-    channel_id = 1405989658487427196
-    guild = bot.guilds[0]
-    channel = guild.get_channel(channel_id)
-    role_id = 501688609104199680
-    role = guild.get_role(int(role_id))
-        
-    if channel:
-        await channel.send(f"Tagger is ready to be used {role.mention}")
-    else:
-        print(f"could not find channel")
-
 
 # List of cogs to ignore
 IGNORED_COGS = {"Dayplay", "Admin", "Shop"}
@@ -130,7 +117,6 @@ bot = commands.Bot(command_prefix=".", intents=intents, help_command=CustomHelpC
 async def on_ready():
     await load_cogs()
     print(f"Cogs loaded")
-    await announce_ready()
 
     
 # Run the bot
